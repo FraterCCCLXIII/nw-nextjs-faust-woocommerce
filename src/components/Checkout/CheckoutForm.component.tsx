@@ -2,7 +2,9 @@
 // Imports
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, ApolloError } from '@apollo/client';
+import { getApolloAuthClient, useAuth } from '@faustwp/core';
 import { loadStripe, Stripe, StripeElements } from '@stripe/stripe-js';
+import client from '@/utils/apollo/ApolloClient';
 
 // Components
 import Billing from './Billing.component';
@@ -133,6 +135,13 @@ const CheckoutForm = () => {
   const [orderCompleted, setorderCompleted] = useState<boolean>(false);
   const [completedOrder, setCompletedOrder] = useState<OrderResponse['checkout']['order'] | null>(null);
   
+  // Initialize Faust.js authentication to ensure session is established
+  const { isAuthenticated, isReady } = useAuth({
+    strategy: 'local',
+    loginPageUrl: '/login-faust',
+    shouldRedirect: false, // Don't redirect on checkout page
+  });
+  
   // Stripe payment processing state
   const [stripeClientSecret, setStripeClientSecret] = useState<string>('');
   const [stripeElements, setStripeElements] = useState<StripeElements | null>(null);
@@ -176,10 +185,13 @@ const CheckoutForm = () => {
     }
   }, [cartError]);
 
-  // Checkout GraphQL mutation
+  // Checkout GraphQL mutation - use authenticated client if user is logged in, otherwise use regular client
+  // This ensures the order is associated with the logged-in user when authenticated
+  const authClient = isAuthenticated && isReady ? getApolloAuthClient() : client;
   const [checkout, { loading: checkoutLoading, data: checkoutData, error: checkoutError }] = useMutation<OrderResponse>(
     CHECKOUT_MUTATION,
     {
+      client: authClient, // Use authenticated client if logged in, regular client for guests
       variables: {
         input: orderData,
       },
