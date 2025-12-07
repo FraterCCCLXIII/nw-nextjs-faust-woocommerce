@@ -1,0 +1,881 @@
+/* WordPress Block Editor Styles */
+/* These styles match WordPress's block editor output */
+
+/* Base block styles */
+.wp-blocks {
+  max-width: 100%;
+}
+
+/* Paragraph blocks */
+.wp-block-paragraph,
+p.wp-block-paragraph {
+  margin-bottom: 1.5em;
+  line-height: 1.8;
+  display: block;
+  visibility: visible;
+  opacity: 1;
+}
+
+.wp-block-paragraph:last-child {
+  margin-bottom: 0;
+}
+
+/* Ensure paragraph text is visible even with editor classes */
+p.block-editor-rich-text__editable,
+.wp-block-paragraph.block-editor-rich-text__editable {
+  display: block;
+  visibility: visible;
+  opacity: 1;
+  margin-bottom: 1.5em;
+  line-height: 1.8;
+}
+
+/* Heading blocks */
+.wp-block-heading,
+h1.wp-block-heading,
+h2.wp-block-heading,
+h3.wp-block-heading,
+h4.wp-block-heading,
+h5.wp-block-heading,
+h6.wp-block-heading {
+  margin-top: 2em;
+  margin-bottom: 1em;
+  font-weight: 700;
+  line-height: 1.2;
+  display: block;
+}
+
+/* Direct heading elements inside wp-block-heading */
+.wp-block-heading h1,
+.wp-block-heading h2,
+.wp-block-heading h3,
+.wp-block-heading h4,
+.wp-block-heading h5,
+.wp-block-heading h6 {
+  margin-top: 0;
+  margin-bottom: 0;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* Heading sizes - when class is on the heading itself */
+h1.wp-block-heading,
+.wp-block-heading h1 {
+  font-size: 2.5em;
+}
+
+h2.wp-block-heading,
+.wp-block-heading h2 {
+  font-size: 2em;
+}
+
+h3.wp-block-heading,
+.wp-block-heading h3 {
+  font-size: 1.75em;
+}
+
+h4.wp-block-heading,
+.wp-block-heading h4 {
+  font-size: 1.5em;
+}
+
+h5.wp-block-heading,
+.wp-block-heading h5 {
+  font-size: 1.25em;
+}
+
+h6.wp-block-heading,
+.wp-block-heading h6 {
+  font-size: 1em;
+}
+
+/* Ensure headings are visible and styled even with editor classes */
+.block-editor-rich-text__editable.wp-block-heading,
+.wp-block-heading.block-editor-rich-text__editable {
+  font-weight: 700;
+  line-height: 1.2;
+  display: block;
+  margin-top: 2em;
+  margin-bottom: 1em;
+}
+
+/* Remove editor-specific styling that might hide content */
+.block-editor-rich-text__editable {
+  min-width: 1px;
+  white-space: normal;
+  display: block;
+  visibility: visible;
+  opacity: 1;
+}
+
+.block-editor-rich-text__editable[style*="white-space: pre-wrap"] {
+  white-space: normal !important;
+}
+
+/* Ensure all text content is visible */
+.rich-text {
+  display: block;
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Make sure headings are visible even with editor classes */
+h1.block-editor-rich-text__editable,
+h2.block-editor-rich-text__editable,
+h3.block-editor-rich-text__editable,
+h4.block-editor-rich-text__editable,
+h5.block-editor-rich-text__editable,
+h6.block-editor-rich-text__editable {
+  font-weight: 700;
+  line-height: 1.2;
+  display: block;
+  visibility: visible;
+  opacity: 1;
+  margin-top: 2em;
+  margin-bottom: 1em;
+}
+
+h1.block-editor-rich-text__editable {
+  font-size: 2.5em;
+}
+
+h2.block-editor-rich-text__editable {
+  font-size: 2em;
+}
+
+h3.block-editor-rich-text__editable {
+  font-size: 1.75em;
+}
+
+h4.block-editor-rich-text__editable {
+  font-size: 1.5em;
+}
+
+h5.block-editor-rich-text__editable {
+  font-size: 1.25em;
+}
+
+h6.block-editor-rich-text__editable {
+  font-size: 1em;
+}
+
+/* Quote blocks */
+.wp-block-quote {
+  margin: 2em 0;
+  padding-left: 1.5em;
+  border-left: 4px solid #ddd;
+  font-style: italic;
+  color: #666;
+}
+
+.wp-block-quote p {
+  margin-bottom: 1em;
+}
+
+.wp-block-quote cite {
+  display: block;
+  margin-top: 1em;
+  font-size: 0.875em;
+  font-style: normal;
+  color: #888;
+}
+
+.wp-block-quote.is-style-large {
+  padding: 2em;
+  border-left: none;
+  border-top: 4px solid #ddd;
+  border-bottom: 4px solid #ddd;
+  text-align: center;
+  font-size: 1.25em;
+}
+
+/* List blocks */
+.wp-block-list {
+  margin: 1.5em 0;
+  padding-left: 2.5em;
+}
+
+.wp-block-list li {
+  margin-bottom: 0.5em;
+  line-height: 1.8;
+}
+
+.wp-block-list ul,
+.wp-block-list ol {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+/* Code blocks */
+.wp-block-code {
+  margin: 2em 0;
+  padding: 1em;
+  background-color: #f5f5f5;
+  border-radius: 0.5em;
+  overflow-x: auto;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.875em;
+  line-height: 1.6;
+}
+
+.wp-block-code code {
+  background: transparent;
+  padding: 0;
+  border: none;
+}
+
+/* Preformatted blocks */
+.wp-block-preformatted {
+  margin: 2em 0;
+  padding: 1em;
+  background-color: #f5f5f5;
+  border-radius: 0.5em;
+  overflow-x: auto;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.875em;
+  line-height: 1.6;
+  white-space: pre;
+}
+
+/* Image blocks */
+.wp-block-image {
+  margin: 2em 0;
+}
+
+.wp-block-image img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5em;
+  display: block;
+}
+
+.wp-block-image.size-full img {
+  width: 100%;
+  height: auto;
+}
+
+.wp-block-image figcaption {
+  margin-top: 0.5em;
+  font-size: 0.875em;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+}
+
+/* Remove editor resizing handles from images */
+.wp-block-image .components-resizable-box__handle {
+  display: none !important;
+}
+
+/* Gallery blocks */
+.wp-block-gallery {
+  margin: 2em 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1em;
+}
+
+.wp-block-gallery .wp-block-image {
+  margin: 0;
+}
+
+/* Group blocks */
+.wp-block-group {
+  margin: 2em 0;
+}
+
+.wp-block-group__inner-container {
+  max-width: 100%;
+}
+
+.wp-block-group.alignfull {
+  width: 100vw;
+  max-width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.wp-block-group.alignwide {
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Background colors and styles */
+.wp-block-group.has-background,
+.wp-block-column.has-background,
+.wp-block-cover.has-background {
+  padding: 2em;
+}
+
+.wp-block-group.has-global-padding {
+  padding: 2em;
+}
+
+.wp-block-column.has-global-padding {
+  padding: 1.5em;
+}
+
+/* Style variations */
+.wp-block-group.is-style-section,
+.wp-block-group.is-style-secondary {
+  padding: 3em 2em;
+}
+
+/* Remove editor-specific styles */
+.block-editor-block-list__block,
+.block-editor-rich-text__editable,
+.components-resizable-box__container,
+.components-drop-zone {
+  all: unset;
+}
+
+.block-editor-block-list__block {
+  display: block;
+}
+
+.components-resizable-box__container {
+  position: relative;
+  display: block;
+}
+
+.components-resizable-box__handle {
+  display: none !important;
+}
+
+.components-drop-zone {
+  display: none !important;
+}
+
+/* Columns blocks */
+.wp-block-columns {
+  margin: 2em 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2em;
+  align-items: stretch;
+}
+
+.wp-block-columns.is-layout-flex {
+  display: flex;
+  flex-wrap: nowrap;
+}
+
+.wp-block-columns.is-nowrap {
+  flex-wrap: nowrap;
+}
+
+/* Vertical alignment on columns container */
+.wp-block-columns.are-vertically-aligned-top {
+  align-items: flex-start !important;
+}
+
+.wp-block-columns.are-vertically-aligned-center {
+  align-items: center !important;
+}
+
+.wp-block-columns.are-vertically-aligned-bottom {
+  align-items: flex-end !important;
+}
+
+.wp-block-columns.alignwide {
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.wp-block-columns.alignfull {
+  width: 100vw;
+  max-width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.wp-block-column {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.wp-block-column.is-layout-constrained {
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.wp-block-column.is-layout-flow {
+  display: block;
+}
+
+/* Vertical alignment on individual columns */
+/* Note: justify-content controls vertical alignment in flex column, align-items controls horizontal */
+.wp-block-column.is-vertically-aligned-top {
+  justify-content: flex-start !important;
+  align-items: stretch !important;
+  align-self: flex-start;
+}
+
+.wp-block-column.is-vertically-aligned-top.is-layout-constrained {
+  justify-content: flex-start !important;
+  align-items: stretch !important;
+}
+
+.wp-block-column.is-vertically-aligned-top.is-layout-flow {
+  /* For flow layout, content naturally flows from top */
+  display: block;
+}
+
+.wp-block-column.is-vertically-aligned-center {
+  justify-content: center !important;
+  align-items: stretch !important;
+  align-self: center;
+}
+
+.wp-block-column.is-vertically-aligned-center.is-layout-constrained {
+  justify-content: center !important;
+  align-items: stretch !important;
+}
+
+.wp-block-column.is-vertically-aligned-center.is-layout-flow {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+}
+
+.wp-block-column.is-vertically-aligned-bottom {
+  justify-content: flex-end !important;
+  align-items: stretch !important;
+  align-self: flex-end;
+}
+
+.wp-block-column.is-vertically-aligned-bottom.is-layout-constrained {
+  justify-content: flex-end !important;
+  align-items: stretch !important;
+}
+
+.wp-block-column.is-vertically-aligned-bottom.is-layout-flow {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: stretch;
+}
+
+/* Ensure content inside columns respects vertical alignment only */
+/* Horizontal alignment is controlled by content-justification classes */
+.wp-block-column.is-vertically-aligned-top > *:first-child {
+  margin-top: 0;
+}
+
+.wp-block-column.is-vertically-aligned-bottom > *:last-child {
+  margin-bottom: 0;
+}
+
+/* Fix for constrained layout - ensure flex container works */
+/* align-items: stretch allows content-justification to control horizontal alignment */
+.wp-block-column.is-layout-constrained.is-vertically-aligned-top {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  align-items: stretch !important;
+}
+
+.wp-block-column.is-layout-constrained.is-vertically-aligned-center {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: stretch !important;
+}
+
+.wp-block-column.is-layout-constrained.is-vertically-aligned-bottom {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-end !important;
+  align-items: stretch !important;
+}
+
+@media (max-width: 768px) {
+  .wp-block-columns {
+    flex-direction: column !important;
+    flex-wrap: wrap !important;
+  }
+  
+  .wp-block-columns.is-nowrap {
+    flex-wrap: wrap !important;
+  }
+  
+  .wp-block-column {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+  }
+}
+
+/* Cover blocks */
+.wp-block-cover {
+  margin: 2em 0;
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.wp-block-cover::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.wp-block-cover__inner-container {
+  position: relative;
+  z-index: 1;
+  color: white;
+  text-align: center;
+}
+
+/* Media & Text blocks */
+.wp-block-media-text {
+  margin: 2em 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2em;
+  align-items: center;
+}
+
+.wp-block-media-text.has-media-on-the-right {
+  grid-template-columns: 1fr 1fr;
+}
+
+.wp-block-media-text.has-media-on-the-right .wp-block-media-text__media {
+  order: 2;
+}
+
+.wp-block-media-text.has-media-on-the-right .wp-block-media-text__content {
+  order: 1;
+}
+
+@media (max-width: 768px) {
+  .wp-block-media-text {
+    grid-template-columns: 1fr;
+  }
+  
+  .wp-block-media-text__media {
+    order: 1;
+  }
+  
+  .wp-block-media-text__content {
+    order: 2;
+  }
+}
+
+/* Button blocks */
+.wp-block-buttons {
+  margin: 1.5em 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1em;
+  align-items: center;
+}
+
+.wp-block-buttons.is-layout-flex {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.wp-block-button {
+  margin: 0;
+}
+
+.wp-block-button__link,
+.wp-element-button {
+  display: inline-block;
+  padding: 0.75em 1.5em;
+  background-color: #000;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 9999px;
+  font-weight: 600;
+  transition: background-color 0.2s;
+  border: none;
+  cursor: pointer;
+}
+
+.wp-block-button__link:hover,
+.wp-element-button:hover {
+  background-color: #333;
+}
+
+.wp-block-button.is-style-outline .wp-block-button__link,
+.wp-block-button.is-style-outline .wp-element-button {
+  background-color: transparent;
+  border: 2px solid #000;
+  color: #000;
+}
+
+.wp-block-button.is-style-outline .wp-block-button__link:hover,
+.wp-block-button.is-style-outline .wp-element-button:hover {
+  background-color: #000;
+  color: #fff;
+}
+
+/* Separator blocks */
+.wp-block-separator {
+  margin: 2em 0;
+  border: none;
+  border-top: 2px solid #ddd;
+}
+
+.wp-block-separator.is-style-wide {
+  width: 100%;
+}
+
+.wp-block-separator.is-style-dots {
+  border: none;
+  text-align: center;
+}
+
+.wp-block-separator.is-style-dots::before {
+  content: '···';
+  color: #ddd;
+  font-size: 2em;
+  letter-spacing: 1em;
+}
+
+/* Spacer blocks */
+.wp-block-spacer {
+  margin: 0;
+}
+
+/* HTML blocks */
+.wp-block-html {
+  margin: 2em 0;
+}
+
+/* Pullquote blocks */
+.wp-block-pullquote {
+  margin: 2em 0;
+  padding: 2em;
+  border-top: 4px solid #000;
+  border-bottom: 4px solid #000;
+  text-align: center;
+  font-size: 1.25em;
+  font-style: italic;
+}
+
+.wp-block-pullquote cite {
+  display: block;
+  margin-top: 1em;
+  font-size: 0.875em;
+  font-style: normal;
+  color: #666;
+}
+
+/* Table blocks */
+.wp-block-table {
+  margin: 2em 0;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.wp-block-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.wp-block-table th,
+.wp-block-table td {
+  padding: 0.75em;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.wp-block-table th {
+  background-color: #f5f5f5;
+  font-weight: 600;
+}
+
+.wp-block-table.is-style-stripes tbody tr:nth-child(odd) {
+  background-color: #f9f9f9;
+}
+
+/* Video blocks */
+.wp-block-video {
+  margin: 2em 0;
+}
+
+.wp-block-video video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Audio blocks */
+.wp-block-audio {
+  margin: 2em 0;
+}
+
+.wp-block-audio audio {
+  width: 100%;
+}
+
+/* File blocks */
+.wp-block-file {
+  margin: 2em 0;
+}
+
+.wp-block-file__button {
+  display: inline-block;
+  padding: 0.5em 1em;
+  background-color: #000;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 0.25em;
+  font-weight: 600;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .wp-block-group.alignfull {
+    margin-left: -1rem;
+    margin-right: -1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  .wp-block-quote.is-style-large {
+    padding: 1.5em;
+    font-size: 1.125em;
+  }
+}
+
+/* Layout flow */
+.is-layout-flow > * {
+  margin-block-start: 0;
+  margin-block-end: 0;
+}
+
+.is-layout-flow > * + * {
+  margin-block-start: 1.5em;
+}
+
+.is-layout-constrained {
+  max-width: 100%;
+}
+
+.is-layout-flex {
+  display: flex;
+}
+
+/* Global padding */
+.has-global-padding {
+  padding: 2em;
+}
+
+@media (max-width: 768px) {
+  .has-global-padding {
+    padding: 1em;
+  }
+}
+
+/* Content justification - controls horizontal alignment */
+/* These apply to the column's content, not the column itself */
+.wp-block-column.is-content-justification-left,
+.wp-block-column.is-content-justification-left > * {
+  text-align: left;
+  align-self: flex-start;
+}
+
+.wp-block-column.is-content-justification-center,
+.wp-block-column.is-content-justification-center > * {
+  text-align: center;
+  align-self: center;
+}
+
+.wp-block-column.is-content-justification-right,
+.wp-block-column.is-content-justification-right > * {
+  text-align: right;
+  align-self: flex-end;
+}
+
+/* For flex layouts, content justification affects child alignment */
+.wp-block-column.is-layout-constrained.is-content-justification-left > * {
+  align-self: flex-start;
+  text-align: left;
+}
+
+.wp-block-column.is-layout-constrained.is-content-justification-center > * {
+  align-self: center;
+  text-align: center;
+}
+
+.wp-block-column.is-layout-constrained.is-content-justification-right > * {
+  align-self: flex-end;
+  text-align: right;
+}
+
+/* Remove all editor-specific attributes and styles */
+[contenteditable],
+[draggable="true"],
+[tabindex="0"],
+[role="document"],
+[aria-label*="Block:"],
+[data-block],
+[data-type],
+[data-title],
+[data-is-drop-zone] {
+  /* Keep functionality but remove editor-specific behavior */
+}
+
+[contenteditable] {
+  -webkit-user-modify: read-only;
+  user-modify: read-only;
+}
+
+[draggable="true"] {
+  -webkit-user-drag: none;
+  user-drag: none;
+}
+
+/* Hide editor UI elements */
+.block-editor-block-list__block::before,
+.block-editor-block-list__block::after {
+  display: none;
+}
+
+/* Ensure proper display for all block types */
+.wp-block {
+  display: block;
+  position: relative;
+}
+
+.wp-block.is-selected {
+  outline: none;
+}
+
+/* Container classes */
+.wp-container-core-columns-is-layout-9,
+.wp-container-core-column-is-layout-10,
+.wp-container-core-column-is-layout-14,
+.wp-container-core-column-is-layout-15 {
+  display: flex;
+  flex-direction: column;
+}
+
+/* WP Elements */
+.wp-elements-3,
+.wp-elements-4,
+.wp-elements-5,
+.wp-elements-6 {
+  display: block;
+}
+

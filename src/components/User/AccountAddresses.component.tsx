@@ -1,0 +1,510 @@
+import { useQuery, useMutation } from '@apollo/client';
+import { useState, useEffect } from 'react';
+import { getApolloAuthClient } from '@faustwp/core';
+import { GET_CURRENT_USER } from '@/utils/gql/GQL_QUERIES';
+import { UPDATE_CUSTOMER } from '@/utils/gql/GQL_MUTATIONS';
+import LoadingSpinner from '../LoadingSpinner/LoadingSpinner.component';
+
+interface AddressFormData {
+  firstName: string;
+  lastName: string;
+  address1: string;
+  address2: string;
+  city: string;
+  postcode: string;
+  country: string;
+  state: string;
+  email?: string;
+  phone?: string;
+}
+
+const AccountAddresses = () => {
+  const authClient = getApolloAuthClient(); // Get authenticated client
+  
+  const { data, loading, error, refetch } = useQuery(GET_CURRENT_USER, {
+    client: authClient, // Use authenticated client
+    fetchPolicy: 'network-only',
+    errorPolicy: 'all',
+  });
+
+  const [updateCustomer, { loading: updating }] = useMutation(UPDATE_CUSTOMER, {
+    client: authClient, // Use authenticated client
+  });
+
+  const [editingAddress, setEditingAddress] = useState<'billing' | 'shipping' | null>(null);
+  const [billingForm, setBillingForm] = useState<AddressFormData>({
+    firstName: '',
+    lastName: '',
+    address1: '',
+    address2: '',
+    city: '',
+    postcode: '',
+    country: '',
+    state: '',
+    email: '',
+    phone: '',
+  });
+  const [shippingForm, setShippingForm] = useState<AddressFormData>({
+    firstName: '',
+    lastName: '',
+    address1: '',
+    address2: '',
+    city: '',
+    postcode: '',
+    country: '',
+    state: '',
+  });
+  const [updateMessage, setUpdateMessage] = useState<string | null>(null);
+  const [updateError, setUpdateError] = useState<string | null>(null);
+
+  const customer = data?.customer;
+
+  // Initialize forms when customer data loads (using useEffect to avoid render issues)
+  useEffect(() => {
+    if (customer && billingForm.firstName === '' && customer.billing) {
+      setBillingForm({
+        firstName: customer.billing.firstName || customer.firstName || '',
+        lastName: customer.billing.lastName || customer.lastName || '',
+        address1: customer.billing.address1 || '',
+        address2: customer.billing.address2 || '',
+        city: customer.billing.city || '',
+        postcode: customer.billing.postcode || '',
+        country: customer.billing.country || '',
+        state: customer.billing.state || '',
+        email: customer.billing.email || customer.email || '',
+        phone: customer.billing.phone || '',
+      });
+    }
+  }, [customer]);
+
+  useEffect(() => {
+    if (customer && shippingForm.firstName === '' && customer.shipping) {
+      setShippingForm({
+        firstName: customer.shipping.firstName || customer.firstName || '',
+        lastName: customer.shipping.lastName || customer.lastName || '',
+        address1: customer.shipping.address1 || '',
+        address2: customer.shipping.address2 || '',
+        city: customer.shipping.city || '',
+        postcode: customer.shipping.postcode || '',
+        country: customer.shipping.country || '',
+        state: customer.shipping.state || '',
+      });
+    }
+  }, [customer]);
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
+  if (error || !customer) {
+    return (
+      <div className="woocommerce-MyAccount-content">
+        <p className="text-red-600">Error loading addresses. Please try again later.</p>
+      </div>
+    );
+  }
+
+  const handleAddressSubmit = async (type: 'billing' | 'shipping') => {
+    setUpdateMessage(null);
+    setUpdateError(null);
+
+    try {
+      const input: any = {};
+      if (type === 'billing') {
+        input.billing = billingForm;
+      } else {
+        input.shipping = shippingForm;
+      }
+
+      const { data: updateData } = await updateCustomer({
+        variables: { input },
+      });
+
+      if (updateData?.updateCustomer?.customer) {
+        setUpdateMessage(`${type === 'billing' ? 'Billing' : 'Shipping'} address updated successfully!`);
+        setEditingAddress(null);
+        await refetch();
+      } else {
+        setUpdateError(`Failed to update ${type} address. Please try again.`);
+      }
+    } catch (err: any) {
+      console.error(`Error updating ${type} address:`, err);
+      setUpdateError(err.message || `Failed to update ${type} address. Please try again.`);
+    }
+  };
+
+  const hasBillingAddress = customer.billing?.address1;
+  const hasShippingAddress = customer.shipping?.address1;
+
+  return (
+    <div className="woocommerce-MyAccount-content">
+      <h2 className="text-2xl font-bold mb-6">Addresses</h2>
+      <p className="text-sm text-gray-600 mb-6">
+        The following addresses will be used on the checkout page by default.
+      </p>
+
+      {updateMessage && (
+        <div className="mb-4 p-3 bg-green-100 text-green-800 rounded-lg">{updateMessage}</div>
+      )}
+      {updateError && (
+        <div className="mb-4 p-3 bg-red-100 text-red-800 rounded-lg">{updateError}</div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Billing Address */}
+        <div className="border border-gray-200 rounded-lg p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">Billing address</h3>
+            {editingAddress !== 'billing' && (
+              <button
+                onClick={() => setEditingAddress('billing')}
+                className="text-sm text-gray-600 hover:text-gray-900 underline"
+              >
+                {hasBillingAddress ? 'Edit' : 'Add'}
+              </button>
+            )}
+          </div>
+
+          {editingAddress === 'billing' ? (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleAddressSubmit('billing');
+              }}
+              className="space-y-4"
+            >
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">First name</label>
+                  <input
+                    type="text"
+                    value={billingForm.firstName}
+                    onChange={(e) => setBillingForm({ ...billingForm, firstName: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Last name</label>
+                  <input
+                    type="text"
+                    value={billingForm.lastName}
+                    onChange={(e) => setBillingForm({ ...billingForm, lastName: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Address line 1</label>
+                <input
+                  type="text"
+                  value={billingForm.address1}
+                  onChange={(e) => setBillingForm({ ...billingForm, address1: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Address line 2</label>
+                <input
+                  type="text"
+                  value={billingForm.address2}
+                  onChange={(e) => setBillingForm({ ...billingForm, address2: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                  <input
+                    type="text"
+                    value={billingForm.city}
+                    onChange={(e) => setBillingForm({ ...billingForm, city: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Postcode</label>
+                  <input
+                    type="text"
+                    value={billingForm.postcode}
+                    onChange={(e) => setBillingForm({ ...billingForm, postcode: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                  <input
+                    type="text"
+                    value={billingForm.country}
+                    onChange={(e) => setBillingForm({ ...billingForm, country: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
+                  <input
+                    type="text"
+                    value={billingForm.state}
+                    onChange={(e) => setBillingForm({ ...billingForm, state: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <input
+                    type="email"
+                    value={billingForm.email}
+                    onChange={(e) => setBillingForm({ ...billingForm, email: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                  <input
+                    type="tel"
+                    value={billingForm.phone}
+                    onChange={(e) => setBillingForm({ ...billingForm, phone: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  disabled={updating}
+                  className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 text-sm disabled:opacity-50"
+                >
+                  {updating ? 'Saving...' : 'Save address'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingAddress(null);
+                    setUpdateMessage(null);
+                    setUpdateError(null);
+                  }}
+                  disabled={updating}
+                  className="px-4 py-2 bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300 text-sm disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="text-sm text-gray-600">
+              {hasBillingAddress ? (
+                <address className="not-italic">
+                  {customer.billing.firstName} {customer.billing.lastName}
+                  <br />
+                  {customer.billing.address1}
+                  {customer.billing.address2 && (
+                    <>
+                      <br />
+                      {customer.billing.address2}
+                    </>
+                  )}
+                  <br />
+                  {customer.billing.city}, {customer.billing.postcode}
+                  {customer.billing.state && (
+                    <>
+                      <br />
+                      {customer.billing.state}
+                    </>
+                  )}
+                  <br />
+                  {customer.billing.country}
+                  {customer.billing.email && (
+                    <>
+                      <br />
+                      <br />
+                      Email: {customer.billing.email}
+                    </>
+                  )}
+                  {customer.billing.phone && (
+                    <>
+                      <br />
+                      Phone: {customer.billing.phone}
+                    </>
+                  )}
+                </address>
+              ) : (
+                <p>You have not set up this type of address yet.</p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Shipping Address */}
+        <div className="border border-gray-200 rounded-lg p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">Shipping address</h3>
+            {editingAddress !== 'shipping' && (
+              <button
+                onClick={() => setEditingAddress('shipping')}
+                className="text-sm text-gray-600 hover:text-gray-900 underline"
+              >
+                {hasShippingAddress ? 'Edit' : 'Add'}
+              </button>
+            )}
+          </div>
+
+          {editingAddress === 'shipping' ? (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleAddressSubmit('shipping');
+              }}
+              className="space-y-4"
+            >
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">First name</label>
+                  <input
+                    type="text"
+                    value={shippingForm.firstName}
+                    onChange={(e) => setShippingForm({ ...shippingForm, firstName: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Last name</label>
+                  <input
+                    type="text"
+                    value={shippingForm.lastName}
+                    onChange={(e) => setShippingForm({ ...shippingForm, lastName: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    required
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Address line 1</label>
+                <input
+                  type="text"
+                  value={shippingForm.address1}
+                  onChange={(e) => setShippingForm({ ...shippingForm, address1: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Address line 2</label>
+                <input
+                  type="text"
+                  value={shippingForm.address2}
+                  onChange={(e) => setShippingForm({ ...shippingForm, address2: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                  <input
+                    type="text"
+                    value={shippingForm.city}
+                    onChange={(e) => setShippingForm({ ...shippingForm, city: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Postcode</label>
+                  <input
+                    type="text"
+                    value={shippingForm.postcode}
+                    onChange={(e) => setShippingForm({ ...shippingForm, postcode: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                  <input
+                    type="text"
+                    value={shippingForm.country}
+                    onChange={(e) => setShippingForm({ ...shippingForm, country: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
+                  <input
+                    type="text"
+                    value={shippingForm.state}
+                    onChange={(e) => setShippingForm({ ...shippingForm, state: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  disabled={updating}
+                  className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 text-sm disabled:opacity-50"
+                >
+                  {updating ? 'Saving...' : 'Save address'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingAddress(null);
+                    setUpdateMessage(null);
+                    setUpdateError(null);
+                  }}
+                  disabled={updating}
+                  className="px-4 py-2 bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300 text-sm disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="text-sm text-gray-600">
+              {hasShippingAddress ? (
+                <address className="not-italic">
+                  {customer.shipping.firstName} {customer.shipping.lastName}
+                  <br />
+                  {customer.shipping.address1}
+                  {customer.shipping.address2 && (
+                    <>
+                      <br />
+                      {customer.shipping.address2}
+                    </>
+                  )}
+                  <br />
+                  {customer.shipping.city}, {customer.shipping.postcode}
+                  {customer.shipping.state && (
+                    <>
+                      <br />
+                      {customer.shipping.state}
+                    </>
+                  )}
+                  <br />
+                  {customer.shipping.country}
+                </address>
+              ) : (
+                <p>You have not set up this type of address yet.</p>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default AccountAddresses;
+

@@ -1,0 +1,36 @@
+.headerGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-areas: "main-nav logo secondary-nav";
+  gap: 1rem;
+  padding-block: 1.125rem;
+  align-items: center;
+}
+
+@media (min-width: 700px) {
+  .headerGrid {
+    padding-block: 2.125rem;
+  }
+}
+
+/* When menu text is visible (lg breakpoint ~1024px), move logo to left */
+@media (min-width: 1024px) {
+  .headerGrid {
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas: "logo main-nav secondary-nav";
+    gap: 2rem;
+  }
+}
+
+.mainNav {
+  grid-area: main-nav;
+}
+
+.logo {
+  grid-area: logo;
+}
+
+.secondaryNav {
+  grid-area: secondary-nav;
+}
+
