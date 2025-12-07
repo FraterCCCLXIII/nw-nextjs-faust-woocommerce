@@ -102,91 +102,360 @@ Install and activate the following plugins in your WordPress site:
 
 #### Core Plugins (Required)
 
+**Installation Order:** Install and activate plugins in this order for best results.
+
 1. **[WooCommerce](https://wordpress.org/plugins/woocommerce/)**
-   - E-commerce platform for WordPress
-   - Install via: Plugins → Add New → Search "WooCommerce"
+   - **Purpose**: E-commerce platform for WordPress
+   - **Installation**:
+     - Go to **Plugins** → **Add New**
+     - Search for "WooCommerce"
+     - Click **"Install Now"** then **"Activate"**
+   - **After Activation**: Complete the WooCommerce setup wizard (see configuration section below)
+   - **Version**: Tested with WooCommerce 9.9.5+
 
 2. **[WP GraphQL](https://wordpress.org/plugins/wp-graphql/)**
-   - Exposes GraphQL API for WordPress
-   - Install via: Plugins → Add New → Search "WPGraphQL"
-   - **Important**: After activation, note your GraphQL endpoint URL (usually `/graphql`)
+   - **Purpose**: Exposes GraphQL API for WordPress
+   - **Installation**:
+     - Go to **Plugins** → **Add New**
+     - Search for "WPGraphQL"
+     - Click **"Install Now"** then **"Activate"**
+   - **After Activation**: 
+     - Go to **GraphQL** → **Settings**
+     - Enable "Public Introspection" (required for Faust.js)
+     - Note your GraphQL endpoint URL (usually `/graphql`)
+   - **Version**: Tested with WP GraphQL 2.3.3+
 
 3. **[WP GraphQL WooCommerce](https://github.com/wp-graphql/wp-graphql-woocommerce)**
-   - Adds WooCommerce functionality to WPGraphQL schema
-   - Install via: Download from GitHub → Plugins → Add New → Upload Plugin
-   - Download: https://github.com/wp-graphql/wp-graphql-woocommerce/releases
+   - **Purpose**: Adds WooCommerce functionality to WPGraphQL schema
+   - **Installation**:
+     - Download the latest release from: https://github.com/wp-graphql/wp-graphql-woocommerce/releases
+     - Download the `.zip` file (e.g., `wp-graphql-woocommerce-0.19.0.zip`)
+     - Go to **Plugins** → **Add New** → **Upload Plugin**
+     - Choose the downloaded `.zip` file
+     - Click **"Install Now"** then **"Activate"**
+   - **Alternative**: Install via WP-CLI:
+     ```bash
+     wp plugin install https://github.com/wp-graphql/wp-graphql-woocommerce/archive/refs/heads/main.zip --activate
+     ```
+   - **Version**: Tested with WP GraphQL WooCommerce 0.19.0+
+   - **Note**: Requires WooCommerce and WP GraphQL to be installed first
 
 4. **[WP GraphQL CORS](https://wordpress.org/plugins/wp-graphql-cors/)**
-   - Enables CORS for GraphQL requests
-   - Install via: Plugins → Add New → Search "WPGraphQL CORS"
-   - **Configuration**: After activation, configure CORS settings to allow your Next.js domain
+   - **Purpose**: Enables CORS for GraphQL requests from your Next.js frontend
+   - **Installation**:
+     - Go to **Plugins** → **Add New**
+     - Search for "WPGraphQL CORS"
+     - Click **"Install Now"** then **"Activate"**
+   - **After Activation**: Configure CORS settings (see detailed configuration section below)
+   - **Version**: Tested with WP GraphQL CORS 2.1+
+   - **Critical**: Must be configured correctly or Next.js won't be able to connect
 
 5. **[Faust.js WordPress Plugin](https://wordpress.org/plugins/faustwp/)**
-   - Provides authentication and API endpoints for Faust.js
-   - Install via: Plugins → Add New → Search "Faust"
-   - **Configuration**: 
-     - Go to Settings → Faust
-     - Copy the "Secret Key" and add it to your `.env.local` as `FAUST_SECRET_KEY`
-     - Set "Frontend URL" to your Next.js app URL (e.g., `http://localhost:3000`)
+   - **Purpose**: Provides authentication and API endpoints for Faust.js
+   - **Installation**:
+     - Go to **Plugins** → **Add New**
+     - Search for "Faust" or "FaustWP"
+     - Click **"Install Now"** then **"Activate"**
+   - **After Activation**: Configure Faust.js settings (see detailed configuration section below)
+   - **Version**: Tested with FaustWP 1.x+
+   - **Note**: Requires WP GraphQL to be installed first
 
 #### Optional Plugins
 
 6. **[WPGraphQL Content Blocks](https://github.com/wpengine/wp-graphql-content-blocks)**
-   - Enables Gutenberg block support in GraphQL
-   - Required if you want to use WordPress blocks in your Next.js app
-   - See [WPGraphQL_CONTENT_BLOCKS_INSTALL.md](./WPGraphQL_CONTENT_BLOCKS_INSTALL.md) for installation
+   - **Purpose**: Enables Gutenberg block support in GraphQL
+   - **Required**: Only if you want to use WordPress blocks in your Next.js app
+   - **Installation**: See [WPGraphQL_CONTENT_BLOCKS_INSTALL.md](./WPGraphQL_CONTENT_BLOCKS_INSTALL.md) for detailed installation instructions
+   - **After Installation**: No additional configuration needed - works automatically
 
 7. **[Advanced Custom Fields (ACF)](https://www.advancedcustomfields.com/)**
-   - For custom product fields
-   - Install via: Plugins → Add New → Search "Advanced Custom Fields"
-   - See [WORDPRESS_CUSTOM_FIELDS_SETUP.md](./WORDPRESS_CUSTOM_FIELDS_SETUP.md) for setup
+   - **Purpose**: For custom product fields and additional content fields
+   - **Installation**:
+     - Go to **Plugins** → **Add New**
+     - Search for "Advanced Custom Fields"
+     - Click **"Install Now"** then **"Activate"**
+   - **Configuration**: See [WORDPRESS_CUSTOM_FIELDS_SETUP.md](./WORDPRESS_CUSTOM_FIELDS_SETUP.md) for detailed setup
+   - **Note**: Free version available, Pro version has more features
 
 8. **[WPGraphQL for Advanced Custom Fields](https://wordpress.org/plugins/wp-graphql-acf/)**
-   - Exposes ACF fields to GraphQL (required if using ACF)
-   - Install via: Plugins → Add New → Search "WPGraphQL ACF"
+   - **Purpose**: Exposes ACF fields to GraphQL (required if using ACF)
+   - **Installation**:
+     - Go to **Plugins** → **Add New**
+     - Search for "WPGraphQL ACF"
+     - Click **"Install Now"** then **"Activate"**
+   - **After Activation**: 
+     - ACF fields will automatically appear in GraphQL
+     - Enable "Show in GraphQL" in ACF field group settings
+   - **Note**: Requires both ACF and WP GraphQL to be installed
 
 9. **[WooCommerce Stripe Payment Gateway](https://woocommerce.com/products/stripe/)**
-   - Required for Stripe payment processing
-   - Install via: WooCommerce → Settings → Payments → Stripe → Set up
-   - **Configuration**: Add your Stripe API keys (Secret key goes here, not in Next.js)
+   - **Purpose**: Required for Stripe payment processing
+   - **Installation**:
+     - Go to **WooCommerce** → **Settings** → **Payments**
+     - Find **Stripe** in the payment methods list
+     - Click **"Set up"** or **"Manage"**
+     - If not installed, WooCommerce will prompt you to install it
+   - **Configuration**: See detailed Stripe configuration section below
+   - **Note**: Stripe plugin is included with WooCommerce, no separate download needed
 
-### WordPress Configuration Steps
+### WordPress Plugin Configuration
 
-1. **Configure WooCommerce**
-   - Go to WooCommerce → Settings
-   - Complete the setup wizard:
-     - Store details (address, currency, etc.)
-     - Payment methods (enable Stripe)
-     - Shipping options
-   - Add some test products
+#### 1. WooCommerce Configuration
 
-2. **Configure WP GraphQL CORS**
-   - Go to Settings → GraphQL CORS (or GraphQL → Settings)
-   - Add your Next.js frontend URL to allowed origins
-   - Example: `http://localhost:3000` (for development)
-   - For production: `https://your-domain.com`
+**Initial Setup:**
+1. Go to **WooCommerce** → **Settings**
+2. Complete the WooCommerce setup wizard:
+   - **Store Details**: Enter your store address, country, and currency
+   - **Payment Methods**: Enable at least one payment method (Stripe recommended)
+   - **Shipping**: Configure shipping zones and methods
+   - **Recommended Plugins**: Skip if desired
 
-3. **Configure Faust.js**
-   - Go to Settings → Faust
-   - Set "Frontend URL" to your Next.js app URL
-   - Copy the "Secret Key" to your `.env.local` file
-   - Enable "Enable Redirects" if you want WordPress to redirect to your Next.js frontend
+**Payment Gateway Setup (Stripe):**
+1. Go to **WooCommerce** → **Settings** → **Payments** → **Stripe**
+2. Click **"Set up"** or **"Manage"**
+3. Configure Stripe settings:
+   - **Enable/Disable**: Check "Enable Stripe"
+   - **Title**: "Credit Card (Stripe)" (or your preferred title)
+   - **Description**: Payment description shown to customers
+   - **Test Mode**: Enable for development, disable for production
+   - **Publishable Key**: Add your Stripe publishable key (`pk_test_...` or `pk_live_...`)
+   - **Secret Key**: Add your Stripe secret key (`sk_test_...` or `sk_live_...`)
+     - ⚠️ **Important**: Secret key stays in WordPress, never in Next.js `.env.local`
+   - **Webhook Secret**: (Optional) For payment status updates
+4. Click **"Save changes"**
 
-4. **Test GraphQL Endpoint**
-   - Visit `http://your-wordpress-site.com/graphql`
-   - You should see a GraphQL interface or endpoint
-   - Test a simple query:
-     ```graphql
-     {
-       products(first: 5) {
-         nodes {
-           id
-           name
-           price
-         }
-       }
-     }
+**Product Setup:**
+1. Go to **Products** → **Add New**
+2. Create test products with:
+   - Product name and description
+   - Price (required)
+   - Product image
+   - Stock status
+   - Product categories
+3. Publish products
+
+#### 2. WP GraphQL Configuration
+
+**Basic Settings:**
+1. Go to **GraphQL** → **Settings** (or **Settings** → **GraphQL**)
+2. Configure the following:
+   - **GraphQL Endpoint**: Usually `/graphql` (default)
+   - **Enable Public Introspection**: ✅ **Check this box** (required for Faust.js)
+   - **Debug Mode**: Enable for development, disable for production
+3. Click **"Save Changes"**
+
+**GraphQL Endpoint URL:**
+- Your GraphQL endpoint will be: `http://your-wordpress-site.com/graphql`
+- Add this to your `.env.local` as `NEXT_PUBLIC_GRAPHQL_URL`
+
+#### 3. WP GraphQL CORS Configuration
+
+**Critical**: This must be configured correctly or the Next.js app won't be able to communicate with WordPress.
+
+1. Go to **Settings** → **WPGraphQL CORS** (or **GraphQL** → **Settings** → **CORS**)
+2. Configure the following settings:
+
+   **Access-Control-Allow-Origin:**
+   - Add your Next.js frontend URL(s), one per line:
+     - For local development: `http://localhost:3000`
+     - For production: `https://your-nextjs-domain.com`
+   - Example:
      ```
+     http://localhost:3000
+     https://your-production-domain.com
+     ```
+
+   **Access-Control-Allow-Credentials:**
+   - ✅ **Enable "Send site credentials"** (required for authentication)
+   - ✅ **Enable "Add Site Address to Access-Control-Allow-Origin header"** (recommended)
+
+   **Access-Control-Allow-Headers:**
+   - Should include: `Content-Type`, `Authorization`, `X-WP-Nonce`
+   - Usually pre-filled, but verify these headers are present
+
+   **Access-Control-Allow-Methods:**
+   - Should include: `GET`, `POST`, `OPTIONS`
+   - Usually pre-filled
+
+3. Click **"Save Changes"**
+
+**Important Notes:**
+- The server must return a specific origin (not `*`) when using `credentials: 'include'`
+- The CORS plugin handles this automatically when you add your domain to the allowed origins list
+- If you're using multiple environments (dev, staging, production), add all URLs
+- Clear any caching plugins after saving CORS settings
+
+#### 4. Faust.js WordPress Plugin Configuration
+
+**Settings Page:**
+1. Go to **Settings** → **Faust** (or **Settings** → **Headless**)
+2. Configure the following:
+
+   **Front-end site URL:**
+   - Set to your Next.js app URL
+   - For local development: `http://localhost:3000`
+   - For production: `https://your-nextjs-domain.com`
+   - Example: `http://localhost:3000`
+
+   **Secret Key:**
+   - This is automatically generated when you first access the settings page
+   - **Copy this key** - you'll need it for your `.env.local` file
+   - Add it as `FAUST_SECRET_KEY` in your Next.js `.env.local`:
+     ```env
+     FAUST_SECRET_KEY=your-secret-key-here
+     ```
+
+   **Enable Redirects:**
+   - ✅ Check this if you want WordPress to redirect to your Next.js frontend
+   - Useful for headless setups where WordPress frontend is disabled
+
+   **Enable Post Previews:**
+   - ✅ Check this to enable post preview functionality
+   - Allows previewing unpublished posts in Next.js
+
+3. Click **"Save Changes"**
+
+**Verification:**
+- After saving, verify the Secret Key is displayed (you can regenerate if needed)
+- Ensure the Front-end site URL matches your Next.js app URL exactly
+
+#### 5. WP GraphQL WooCommerce Configuration
+
+**No Additional Configuration Required:**
+- Once installed and activated, WP GraphQL WooCommerce automatically extends the GraphQL schema
+- No settings page or configuration needed
+- The plugin adds WooCommerce types, queries, and mutations to your GraphQL endpoint
+
+**Verification:**
+- Test that WooCommerce queries work in GraphQL:
+  ```graphql
+  {
+    products(first: 5) {
+      nodes {
+        id
+        name
+        price
+        stockStatus
+      }
+    }
+  }
+  ```
+
+#### 6. WooCommerce Stripe Payment Gateway Configuration
+
+**Setup:**
+1. Go to **WooCommerce** → **Settings** → **Payments**
+2. Find **Stripe** in the payment methods list
+3. Click **"Set up"** or **"Manage"**
+4. Configure Stripe settings:
+
+   **General Settings:**
+   - **Enable/Disable**: ✅ Enable Stripe
+   - **Title**: "Credit Card" (or your preferred title)
+   - **Description**: "Pay securely with your credit card via Stripe"
+   - **Test Mode**: ✅ Enable for development/testing
+
+   **Stripe Account Details:**
+   - **Publishable Key**: Your Stripe publishable key (`pk_test_...` for test mode)
+   - **Secret Key**: Your Stripe secret key (`sk_test_...` for test mode)
+     - ⚠️ **Never share or commit secret keys to version control**
+   - **Webhook Secret**: (Optional) For real-time payment status updates
+     - Set up webhook endpoint in Stripe Dashboard: `https://your-wordpress-site.com/wc-api/stripe`
+
+   **Statement Descriptor:**
+   - Customize how charges appear on customer statements
+   - Example: "YOUR STORE NAME"
+
+   **Payment Request Buttons:**
+   - Apple Pay, Google Pay, etc. (optional)
+   - Configure if you want to enable these payment methods
+
+5. Click **"Save changes"**
+
+**Testing:**
+- Use Stripe test cards: `4242 4242 4242 4242` (any future expiry, any CVC)
+- Test successful and failed payment scenarios
+
+#### 7. WPGraphQL Content Blocks Configuration (Optional)
+
+**No Configuration Required:**
+- Once installed and activated, the plugin automatically works
+- No settings page or configuration needed
+- Provides `editorBlocks` field in GraphQL queries
+
+**Verification:**
+- Test with a GraphQL query:
+  ```graphql
+  {
+    posts(first: 1) {
+      nodes {
+        title
+        editorBlocks(flat: false) {
+          __typename
+          name
+          renderedHtml
+        }
+      }
+    }
+  }
+  ```
+
+#### 8. Advanced Custom Fields (ACF) Configuration (Optional)
+
+**If using ACF for custom product fields:**
+
+1. **Install ACF Plugin**
+   - Go to **Plugins** → **Add New** → Search "Advanced Custom Fields"
+   - Install and activate
+
+2. **Install WPGraphQL ACF Plugin**
+   - Go to **Plugins** → **Add New** → Search "WPGraphQL ACF"
+   - Install and activate
+
+3. **Create Custom Fields**
+   - Go to **Custom Fields** → **Add New**
+   - Create field groups for products
+   - See [WORDPRESS_CUSTOM_FIELDS_SETUP.md](./WORDPRESS_CUSTOM_FIELDS_SETUP.md) for detailed setup
+
+4. **Expose to GraphQL**
+   - In ACF field group settings, enable "Show in GraphQL"
+   - Set GraphQL field name
+   - Fields will automatically appear in GraphQL queries
+
+### Testing Your Configuration
+
+**1. Test GraphQL Endpoint:**
+- Visit `http://your-wordpress-site.com/graphql`
+- You should see a GraphQL interface or endpoint
+- Test a simple query:
+  ```graphql
+  {
+    products(first: 5) {
+      nodes {
+        id
+        name
+        price
+        stockStatus
+      }
+    }
+  }
+  ```
+
+**2. Test CORS Configuration:**
+- Open browser DevTools → Network tab
+- Make a request from your Next.js app
+- Check that CORS headers are present in the response
+- Verify no CORS errors in console
+
+**3. Test Faust.js Authentication:**
+- Try logging in from your Next.js app
+- Check that authentication tokens are being set
+- Verify user data loads correctly after login
+
+**4. Test WooCommerce Integration:**
+- Add products to cart in Next.js
+- Verify cart data syncs with WooCommerce
+- Test checkout flow (if working)
 
 ## 📦 Dependencies
 
