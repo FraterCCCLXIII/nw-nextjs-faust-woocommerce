@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
-import { useRouter } from 'next/router';
-import { LOGIN_USER } from '@/utils/gql/GQL_MUTATIONS';
+import { useQuery } from '@apollo/client';
 import { GET_CURRENT_USER } from '@/utils/gql/GQL_QUERIES';
+import { login } from '@/utils/auth';
 import Button from '@/components/UI/Button.component';
+import client from '@/utils/apollo/ApolloClient';
 
 interface CheckoutLoginProps {
   onLoginSuccess?: () => void;
@@ -21,17 +21,14 @@ const CheckoutLogin = ({ onLoginSuccess }: CheckoutLoginProps) => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
-  const router = useRouter();
 
   // Check if user is already logged in
-  const { data } = useQuery(GET_CURRENT_USER, {
+  const { data, refetch } = useQuery(GET_CURRENT_USER, {
     errorPolicy: 'all',
     fetchPolicy: 'cache-and-network',
   });
 
-  const isLoggedIn = !!data?.customer;
-
-  const [loginMutation] = useMutation(LOGIN_USER);
+  const isLoggedIn = !!data?.customer && data?.customer?.id !== 'guest' && data?.customer?.id !== 'cGd1ZXN0';
 
   // Don't show login section if user is already logged in
   if (isLoggedIn) {
@@ -44,19 +41,23 @@ const CheckoutLogin = ({ onLoginSuccess }: CheckoutLoginProps) => {
     setLoading(true);
 
     try {
-      const result = await loginMutation({
-        variables: {
-          username,
-          password,
-        },
-      });
+      const result = await login(username, password);
 
-      if (result.data?.loginWithCookies?.status === 'SUCCESS') {
-        // Refresh the page to update cart and user data
+      if (result.success && result.status === 'SUCCESS') {
+        // Clear Apollo cache to ensure fresh user data
+        await client.clearStore();
+        await client.resetStore();
+        
+        // Wait a moment for cookies to be set
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        // Refetch user data to get billing/shipping info
+        const { data: userData } = await refetch();
+        
+        // Call success callback to populate form fields
         if (onLoginSuccess) {
           onLoginSuccess();
         }
-        router.reload();
       } else {
         setError('Invalid username or password');
       }

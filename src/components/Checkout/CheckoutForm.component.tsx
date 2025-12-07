@@ -237,6 +237,10 @@ const CheckoutForm = () => {
       paymentMethod: submitData.paymentMethod || 'bacs',
     };
     
+    // Note: If user is logged in (cookies are set), WooCommerce GraphQL will automatically
+    // associate this order with the user's account. The checkout mutation uses cookie-based
+    // authentication, so no additional user ID needs to be passed.
+    
     const stripeGatewayId = process.env.NEXT_PUBLIC_STRIPE_GATEWAY_ID || 'stripe';
     const isStripe = formData.paymentMethod === stripeGatewayId || 
                      formData.paymentMethod === 'stripe' || 

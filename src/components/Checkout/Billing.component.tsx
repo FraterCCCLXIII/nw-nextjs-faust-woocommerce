@@ -6,6 +6,7 @@ import {
   FormProvider,
 } from 'react-hook-form';
 import { useState, useEffect } from 'react';
+import { useQuery } from '@apollo/client';
 
 // Components
 import { InputField } from '@/components/Input/InputField.component';
@@ -17,6 +18,9 @@ import CreditCardFields from './CreditCardFields.component';
 import StateField from './StateField.component';
 import BillingAddressCheckbox from './BillingAddressCheckbox.component';
 import BillingAddressFields from './BillingAddressFields.component';
+
+// GraphQL
+import { GET_CURRENT_USER } from '@/utils/gql/GQL_QUERIES';
 
 // Constants
 import { INPUT_FIELDS } from '@/utils/constants/INPUT_FIELDS';
@@ -79,6 +83,93 @@ const Billing = ({
   const [stripeClientSecret, setStripeClientSecret] = useState<string>('');
   const [stripeElements, setStripeElements] = useState<any>(null);
   const [stripePaymentReady, setStripePaymentReady] = useState<boolean>(false);
+  const [fieldsPopulated, setFieldsPopulated] = useState(false);
+  
+  // Query user data to auto-populate form
+  const { data: userData, refetch: refetchUser } = useQuery(GET_CURRENT_USER, {
+    errorPolicy: 'all',
+    fetchPolicy: 'cache-and-network',
+  });
+
+  const customer = userData?.customer;
+  const isLoggedIn = !!customer && customer?.id !== 'guest' && customer?.id !== 'cGd1ZXN0';
+  
+  // Auto-populate form fields from user data when logged in
+  useEffect(() => {
+    if (isLoggedIn && customer && !fieldsPopulated) {
+      const billing = customer.billing;
+      const shipping = customer.shipping;
+      
+      // Populate email from customer
+      if (customer.email && !methods.getValues('email')) {
+        methods.setValue('email', customer.email);
+      }
+      
+      // Populate shipping fields (default to shipping address, fallback to billing)
+      const addressSource = shipping?.address1 ? shipping : billing;
+      
+      if (addressSource) {
+        if (addressSource.firstName && !methods.getValues('firstName')) {
+          methods.setValue('firstName', addressSource.firstName);
+        }
+        if (addressSource.lastName && !methods.getValues('lastName')) {
+          methods.setValue('lastName', addressSource.lastName);
+        }
+        if (addressSource.address1 && !methods.getValues('address1')) {
+          methods.setValue('address1', addressSource.address1);
+        }
+        if (addressSource.city && !methods.getValues('city')) {
+          methods.setValue('city', addressSource.city);
+        }
+        if (addressSource.state && !methods.getValues('state')) {
+          methods.setValue('state', addressSource.state);
+        }
+        if (addressSource.postcode && !methods.getValues('postcode')) {
+          methods.setValue('postcode', addressSource.postcode);
+        }
+        if (addressSource.phone && !methods.getValues('phone')) {
+          methods.setValue('phone', addressSource.phone);
+        }
+      }
+      
+      // Populate billing fields if different from shipping
+      if (billing && billing.address1 && billing.address1 !== shipping?.address1) {
+        if (billing.firstName && !methods.getValues('billingFirstName')) {
+          methods.setValue('billingFirstName', billing.firstName);
+        }
+        if (billing.lastName && !methods.getValues('billingLastName')) {
+          methods.setValue('billingLastName', billing.lastName);
+        }
+        if (billing.address1 && !methods.getValues('billingAddress1')) {
+          methods.setValue('billingAddress1', billing.address1);
+        }
+        if (billing.city && !methods.getValues('billingCity')) {
+          methods.setValue('billingCity', billing.city);
+        }
+        if (billing.state && !methods.getValues('billingState')) {
+          methods.setValue('billingState', billing.state);
+        }
+        if (billing.postcode && !methods.getValues('billingPostcode')) {
+          methods.setValue('billingPostcode', billing.postcode);
+        }
+      }
+      
+      setFieldsPopulated(true);
+    }
+  }, [isLoggedIn, customer, methods, fieldsPopulated]);
+
+  // Handle login success - refetch user data and populate fields
+  const handleLoginSuccess = async () => {
+    const { data: newUserData } = await refetchUser();
+    if (newUserData?.customer) {
+      setFieldsPopulated(false); // Reset to trigger population
+    }
+  };
+
+  // Handle account creation success - same as login success
+  const handleAccountCreated = async () => {
+    await handleLoginSuccess();
+  };
   
   // Pass Stripe data to parent
   useEffect(() => {
@@ -104,7 +195,7 @@ const Billing = ({
       <FormProvider {...methods}>
         <form onSubmit={methods.handleSubmit(handleFormSubmit)}>
           {/* Login Section */}
-          <CheckoutLogin />
+          <CheckoutLogin onLoginSuccess={handleLoginSuccess} />
 
           {/* Compact Form Fields - Side by Side, No Top Labels */}
           <div className="space-y-3 mb-6">
@@ -179,11 +270,12 @@ const Billing = ({
           </div>
 
           {/* Create Account During Checkout */}
-          {email && (
+          {email && !isLoggedIn && (
             <CreateAccountCheckbox
               email={email}
               firstName={methods.watch('firstName')}
               lastName={methods.watch('lastName')}
+              onAccountCreated={handleAccountCreated}
             />
           )}
 
