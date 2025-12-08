@@ -72,6 +72,7 @@ export interface IProduct {
   averageRating?: number;
   slug?: string;
   description?: string;
+  shortDescription?: string;
   onSale: boolean;
   image?: IImage;
   name: string;
@@ -96,7 +97,20 @@ export interface IProductRootObject {
     databaseId: number;
     stockQuantity: number;
     purchasable: boolean;
+    attributes?: {
+      nodes?: Array<{
+        name: string;
+        value: string;
+      }>;
+    };
   } | null;
+  selectedAttributes?: Record<string, string>;
+  productAttributes?: {
+    nodes?: Array<{
+      name: string;
+      options?: string[];
+    }>;
+  };
 }
 
 /**
@@ -114,6 +128,8 @@ const AddToCart = ({
   inStock = true,
   hasVariations = false,
   selectedVariation = null,
+  selectedAttributes = {},
+  productAttributes,
 }: IProductRootObject) => {
   const { syncWithWooCommerce, isLoading: isCartLoading } = useCartStore();
   const [requestError, setRequestError] = useState<boolean>(false);
@@ -198,13 +214,25 @@ const AddToCart = ({
       productId: number;
       variationId?: number;
       quantity?: number;
+      variation?: Array<{
+        attributeName: string;
+        attributeValue: string;
+      }>;
     } = {
       productId,
     };
 
-    // Add variation ID if this is a variable product with a selected variation
+    // For variable products, try using only variationId first
+    // Some WooCommerce setups don't require variation attributes when variationId is provided
     if (hasVariations && finalVariationId) {
       input.variationId = finalVariationId;
+      
+      // Don't include variation attributes - WooCommerce should identify the variation from variationId
+      // If this fails with "Size is a required field", we'll need to add them back with the correct format
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[AddToCart] Using variationId only (no variation attributes):', finalVariationId);
+        console.log('[AddToCart] If this fails, WooCommerce may require variation attributes');
+      }
     }
 
     // Add quantity (default to 1)

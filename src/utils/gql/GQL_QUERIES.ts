@@ -9,6 +9,7 @@ export const GET_SINGLE_PRODUCT = gql`
       averageRating
       slug
       description
+      shortDescription
       onSale
       image {
         id
@@ -34,6 +35,12 @@ export const GET_SINGLE_PRODUCT = gql`
         regularPrice
         price
         id
+        attributes {
+          nodes {
+            name
+            options
+          }
+        }
         variations {
           nodes {
             id

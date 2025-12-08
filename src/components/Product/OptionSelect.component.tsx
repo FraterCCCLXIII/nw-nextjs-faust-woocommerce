@@ -17,28 +17,56 @@ const OptionSelect: React.FC<OptionSelectProps> = ({
   "data-testid": dataTestId,
   disabled,
 }) => {
+  // Filter out empty or invalid options
+  const validOptions = options?.filter((opt) => {
+    const str = String(opt || '').trim();
+    return str.length > 0;
+  }) || [];
+
+  // Debug logging in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log('OptionSelect debug:', {
+      title,
+      options,
+      validOptions,
+      current,
+    });
+  }
+
+  if (validOptions.length === 0) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('OptionSelect: No valid options found for', title);
+    }
+    return null;
+  }
+
   return (
     <div className="flex flex-col gap-y-3">
       <span className="text-sm text-gray-700">Select {title}</span>
       <div
-        className="flex flex-wrap justify-between gap-2"
+        className="flex flex-wrap gap-2"
         data-testid={dataTestId}
       >
-        {options.map((value) => {
-          const isSelected = value === current;
+        {validOptions.map((value) => {
+          const trimmedValue = String(value).trim();
+          const isSelected = trimmedValue === current;
+          
           return (
             <button
-              onClick={() => updateOption(value)}
-              key={value}
-              className={`border text-sm h-10 rounded-full px-4 flex-1 transition-all ${
+              onClick={() => !disabled && updateOption(trimmedValue)}
+              key={trimmedValue}
+              type="button"
+              className={`border text-sm h-10 rounded-full px-4 min-w-[80px] transition-all font-medium ${
                 isSelected
-                  ? "border-gray-900 bg-gray-900 text-white"
-                  : "border-gray-300 bg-gray-50 text-gray-900 hover:border-gray-900 hover:shadow-sm"
+                  ? "border-gray-900 bg-gray-900 text-white shadow-sm"
+                  : "border-gray-300 bg-white text-gray-900 hover:border-gray-900 hover:bg-gray-50 hover:shadow-sm"
+              } ${
+                disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
               }`}
               disabled={disabled}
               data-testid="option-button"
             >
-              {value}
+              {trimmedValue || value}
             </button>
           );
         })}

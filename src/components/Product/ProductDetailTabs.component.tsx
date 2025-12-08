@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { cleanHtmlFromText } from '@/utils/functions/productUtils';
+import { convertTextToHtml } from '@/utils/functions/productUtils';
 
 interface ProductDetailTabsProps {
   product: {
@@ -56,8 +56,11 @@ const ProductDetailTabs = ({ product }: ProductDetailTabsProps) => {
     metadata = {};
   }
 
-  const description = cleanHtmlFromText(metadata?.description || product.description || '');
-  const reviews = cleanHtmlFromText(metadata?.reviews || '');
+  const descriptionRaw = metadata?.description || product.description || '';
+  const reviewsRaw = metadata?.reviews || '';
+  
+  const descriptionHtml = convertTextToHtml(descriptionRaw);
+  const reviewsHtml = reviewsRaw ? convertTextToHtml(reviewsRaw) : '';
 
   const tabs = [
     { id: 'description' as const, label: 'Description' },
@@ -67,9 +70,9 @@ const ProductDetailTabs = ({ product }: ProductDetailTabsProps) => {
   const getActiveContent = () => {
     switch (activeTab) {
       case 'description':
-        return description;
+        return descriptionHtml;
       case 'reviews':
-        return reviews || 'No reviews yet. Be the first to review this product!';
+        return reviewsHtml || 'No reviews yet. Be the first to review this product!';
       default:
         return '';
     }
@@ -104,9 +107,10 @@ const ProductDetailTabs = ({ product }: ProductDetailTabsProps) => {
       {/* Tab Content */}
       <div className="prose prose-sm max-w-none">
         {activeContent ? (
-          <div className="product-detail-content whitespace-pre-line">
-            {activeContent}
-          </div>
+          <div
+            className="product-detail-content"
+            dangerouslySetInnerHTML={{ __html: activeContent }}
+          />
         ) : (
           <p className="text-gray-500">No content available.</p>
         )}

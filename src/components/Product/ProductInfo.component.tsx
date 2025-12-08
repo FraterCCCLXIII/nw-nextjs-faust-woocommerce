@@ -1,10 +1,10 @@
 import Link from 'next/link';
-import { cleanHtmlFromText } from '@/utils/functions/productUtils';
+import { convertTextToHtml } from '@/utils/functions/productUtils';
 
 interface ProductInfoProps {
   product: {
     name: string;
-    description?: string;
+    shortDescription?: string;
     productCategories?: {
       nodes?: Array<{
         name: string;
@@ -16,7 +16,8 @@ interface ProductInfoProps {
 
 const ProductInfo = ({ product }: ProductInfoProps) => {
   const collection = product.productCategories?.nodes?.[0];
-  const cleanDescription = cleanHtmlFromText(product.description);
+  const shortDescription = product.shortDescription;
+  const htmlContent = shortDescription ? convertTextToHtml(shortDescription) : '';
 
   return (
     <div id="product-info">
@@ -36,13 +37,12 @@ const ProductInfo = ({ product }: ProductInfoProps) => {
           {product.name}
         </h2>
 
-        {cleanDescription && (
-          <p
-            className="text-base text-gray-600 whitespace-pre-line"
+        {htmlContent && (
+          <div
+            className="product-detail-content text-gray-600"
             data-testid="product-description"
-          >
-            {cleanDescription}
-          </p>
+            dangerouslySetInnerHTML={{ __html: htmlContent }}
+          />
         )}
       </div>
     </div>

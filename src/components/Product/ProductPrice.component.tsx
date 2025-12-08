@@ -39,6 +39,18 @@ const ProductPrice = ({ product, selectedVariation }: ProductPriceProps) => {
       displayRegularPrice = variation.regularPrice;
       displaySalePrice = variation.salePrice;
       isOnSale = variation.onSale;
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[ProductPrice] Using variation price:', {
+          variationId: variation.databaseId,
+          price: displayPrice,
+          regularPrice: displayRegularPrice,
+          salePrice: displaySalePrice,
+          onSale: isOnSale
+        });
+      }
+    } else if (process.env.NODE_ENV === 'development') {
+      console.warn('[ProductPrice] Variation not found for ID:', selectedVariation);
     }
   } else {
     // For products without selected variation, determine display price
@@ -86,10 +98,8 @@ const ProductPrice = ({ product, selectedVariation }: ProductPriceProps) => {
         }`}
         data-testid="product-price"
       >
-        {product.variations && !selectedVariation && 'From '}
-        {product.variations && selectedVariation
-          ? filteredVariantPrice(priceToDisplay, '')
-          : priceToDisplay}
+        {product.variations && !selectedVariation ? 'From ' : ''}
+        {priceToDisplay}
       </span>
       {isOnSale && formattedRegularPrice && (
         <>
