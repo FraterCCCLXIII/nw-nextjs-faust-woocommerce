@@ -183,7 +183,8 @@ const ArticlePost: NextPage<PostPageProps> = ({
                   onError={() => setImageError(true)}
                   unoptimized={
                     post.featuredImage.node.sourceUrl.includes('localhost') ||
-                    post.featuredImage.node.sourceUrl.includes('127.0.0.1')
+                    post.featuredImage.node.sourceUrl.includes('127.0.0.1') ||
+                    post.featuredImage.node.sourceUrl.includes('moleculestore.local')
                   }
                 />
               </div>

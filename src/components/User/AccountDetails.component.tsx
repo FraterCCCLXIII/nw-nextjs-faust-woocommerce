@@ -1,6 +1,6 @@
 import { useQuery, useMutation } from '@apollo/client';
 import { useState, useEffect } from 'react';
-import { getApolloAuthClient } from '@faustwp/core';
+// import { getApolloAuthClient } from '@faustwp/core'; // Removed Faust.js auth client
 import { GET_CURRENT_USER } from '@/utils/gql/GQL_QUERIES';
 import { UPDATE_CUSTOMER } from '@/utils/gql/GQL_MUTATIONS';
 import LoadingSpinner from '../LoadingSpinner/LoadingSpinner.component';
@@ -8,10 +8,10 @@ import LoadingSpinner from '../LoadingSpinner/LoadingSpinner.component';
 const AccountDetails = () => {
   console.log('[AccountDetails] Component rendering...');
   
-  const authClient = getApolloAuthClient(); // Get authenticated client
+  // const authClient = getApolloAuthClient(); // Removed Faust.js auth client
   
   const { data, loading, error, refetch } = useQuery(GET_CURRENT_USER, {
-    client: authClient, // Use authenticated client
+    // client: authClient, // Removed client specific to Faust.js auth
     fetchPolicy: 'network-only',
     errorPolicy: 'all',
   });
@@ -33,7 +33,7 @@ const AccountDetails = () => {
   }, [data, error]);
 
   const [updateCustomer, { loading: updating }] = useMutation(UPDATE_CUSTOMER, {
-    client: authClient, // Use authenticated client
+    // client: authClient, // Removed client specific to Faust.js auth
   });
 
   const [isEditing, setIsEditing] = useState(false);

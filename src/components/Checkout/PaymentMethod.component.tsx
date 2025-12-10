@@ -45,22 +45,57 @@ const PaymentMethod = ({ onStripeElementReady, onStripeClientSecret }: PaymentMe
     }
   );
 
+  // Get enabled payment gateways
+  // Note: WooCommerce GraphQL returns only available (enabled) gateways by default
+  const allGateways = data?.paymentGateways?.nodes || [];
+  // All returned gateways are already enabled (WooCommerce GraphQL filters them)
+  const enabledGateways = allGateways;
+  
   // Debug logging
   useEffect(() => {
     if (data) {
       console.log('[PaymentMethod] Payment gateways data:', data);
       console.log('[PaymentMethod] All gateways:', data.paymentGateways?.nodes);
-      console.log('[PaymentMethod] Enabled gateways:', data.paymentGateways?.nodes?.filter(g => g.enabled));
+      console.log('[PaymentMethod] Enabled gateways:', enabledGateways);
+      console.log('[PaymentMethod] Gateway IDs:', enabledGateways.map(g => g.id));
+      console.log('[PaymentMethod] Gateway details:', enabledGateways.map(g => ({ id: g.id, title: g.title, description: g.description })));
+      
+      // Warn if no gateways are enabled
+      if (enabledGateways.length === 0) {
+        console.warn('[PaymentMethod] ⚠️ No enabled payment gateways found! This will cause checkout to fail.');
+        console.warn('[PaymentMethod] Please check WooCommerce → Settings → Payments and ensure at least one gateway is enabled.');
+      } else {
+        console.log('[PaymentMethod] ✅ Payment gateways loaded successfully:', enabledGateways.length, 'gateway(s) available');
+      }
     }
     if (error) {
       console.error('[PaymentMethod] Error fetching payment gateways:', error);
+      console.error('[PaymentMethod] Error details:', {
+        message: error.message,
+        graphQLErrors: error.graphQLErrors,
+        networkError: error.networkError,
+      });
     }
-  }, [data, error]);
-
-  // Get enabled payment gateways
-  // Note: WooCommerce GraphQL returns only available (enabled) gateways by default
-  const allGateways = data?.paymentGateways?.nodes || [];
-  const enabledGateways = allGateways; // All returned gateways are already enabled
+    if (loading) {
+      console.log('[PaymentMethod] Loading payment gateways...');
+    }
+  }, [data, error, loading, enabledGateways]);
+  
+  // Log gateway details for debugging
+  if (enabledGateways.length > 0) {
+    console.log('[PaymentMethod] Processing gateways:', {
+      total: allGateways.length,
+      enabled: enabledGateways.length,
+      gatewayIds: enabledGateways.map(g => g.id),
+      gatewayDetails: enabledGateways.map(g => ({ id: g.id, title: g.title, description: g.description })),
+    });
+  } else {
+    console.log('[PaymentMethod] Processing gateways:', {
+      total: allGateways.length,
+      enabled: enabledGateways.length,
+      gatewayIds: [],
+    });
+  }
   
   // Create a map of gateway IDs for quick lookup
   const enabledGatewayIds = new Set(enabledGateways.map(gateway => gateway.id));
@@ -74,10 +109,9 @@ const PaymentMethod = ({ onStripeElementReady, onStripeClientSecret }: PaymentMe
                           Array.from(enabledGatewayIds).some(id => id.startsWith('stripe'));
   const isEcryptEnabled = enabledGatewayIds.has('ecrypt_payment_gateway');
   
-  // Determine default payment method (first enabled gateway, or bacs if available)
-  const defaultMethod = isBacsEnabled ? 'bacs' : 
-                        isStripeEnabled ? stripeGatewayId : 
-                        enabledGateways[0]?.id || 'bacs';
+  // Determine default payment method - use the actual gateway ID from WooCommerce
+  // Always use the first enabled gateway's actual ID, not hardcoded values
+  const defaultMethod = enabledGateways.length > 0 ? enabledGateways[0].id : null;
   
   const [selectedMethod, setSelectedMethod] = useState<string>(defaultMethod);
 
@@ -114,18 +148,20 @@ const PaymentMethod = ({ onStripeElementReady, onStripeClientSecret }: PaymentMe
   useEffect(() => {
     if (paymentMethod) {
       setSelectedMethod(paymentMethod);
-    } else if (defaultMethod && !loading) {
+      console.log('[PaymentMethod] Payment method from form:', paymentMethod);
+    } else if (defaultMethod && !loading && enabledGateways.length > 0) {
+      console.log('[PaymentMethod] Setting default payment method to:', defaultMethod);
       setSelectedMethod(defaultMethod);
       setValue('paymentMethod', defaultMethod, { shouldValidate: true });
     }
-  }, [paymentMethod, defaultMethod, loading, setValue]);
+  }, [paymentMethod, defaultMethod, loading, setValue, enabledGateways.length]);
 
   // Update form value when selection changes
   const handleMethodChange = (method: string) => {
-    // Map 'stripe' to the actual Stripe gateway ID
-    const actualMethod = method === 'stripe' ? stripeGatewayId : method;
-    setSelectedMethod(actualMethod);
-    setValue('paymentMethod', actualMethod, { shouldValidate: true });
+    // Use the actual gateway ID from WooCommerce (method is already the gateway ID)
+    console.log('[PaymentMethod] Payment method changed to:', method);
+    setSelectedMethod(method);
+    setValue('paymentMethod', method, { shouldValidate: true });
   };
 
   // Register the payment method field

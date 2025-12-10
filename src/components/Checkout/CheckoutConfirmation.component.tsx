@@ -1,8 +1,10 @@
 // Imports
 import Image from 'next/image';
 import Link from 'next/link';
+import { useQuery } from '@apollo/client';
 import Button from '../UI/Button.component';
 import CreateAccountAfterCheckout from './CreateAccountAfterCheckout.component';
+import { GET_CURRENT_USER } from '@/utils/gql/GQL_QUERIES';
 
 interface OrderItem {
   id: string;
@@ -83,6 +85,17 @@ interface CheckoutConfirmationProps {
 }
 
 const CheckoutConfirmation = ({ order }: CheckoutConfirmationProps) => {
+  // Check if user is logged in
+  const { data: authData, loading: authLoading } = useQuery(GET_CURRENT_USER, {
+    errorPolicy: 'all',
+    fetchPolicy: 'network-only', // Always check fresh status
+  });
+
+  const customer = authData?.customer;
+  const isLoggedIn = !!customer && 
+                     customer.id !== 'guest' && 
+                     customer.id !== 'cGd1ZXN0';
+
   const formatAddress = (address: BillingAddress | ShippingAddress) => {
     const parts = [
       address.address1,
@@ -175,7 +188,8 @@ const CheckoutConfirmation = ({ order }: CheckoutConfirmationProps) => {
                     className="rounded object-cover"
                     unoptimized={
                       getProductImage(item).includes('localhost') ||
-                      getProductImage(item).includes('127.0.0.1')
+                      getProductImage(item).includes('127.0.0.1') ||
+                      getProductImage(item).includes('moleculestore.local')
                     }
                   />
                 </div>
@@ -244,14 +258,16 @@ const CheckoutConfirmation = ({ order }: CheckoutConfirmationProps) => {
         </div>
       </div>
 
-      {/* Create Account After Checkout (Recommended) */}
-      <div className="mb-8">
-        <CreateAccountAfterCheckout
-          email={order.billing.email}
-          firstName={order.billing.firstName}
-          lastName={order.billing.lastName}
-        />
-      </div>
+      {/* Create Account After Checkout (Only show for non-logged-in users) */}
+      {!authLoading && !isLoggedIn && (
+        <div className="mb-8">
+          <CreateAccountAfterCheckout
+            email={order.billing.email}
+            firstName={order.billing.firstName}
+            lastName={order.billing.lastName}
+          />
+        </div>
+      )}
 
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-4 justify-center">

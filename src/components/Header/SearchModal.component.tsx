@@ -315,7 +315,8 @@ const SearchModal = ({ isOpen, onClose }: SearchModalProps) => {
                             sizes="64px"
                             unoptimized={
                               result.thumbnail.includes("localhost") ||
-                              result.thumbnail.includes("127.0.0.1")
+                              result.thumbnail.includes("127.0.0.1") ||
+                              result.thumbnail.includes("moleculestore.local")
                             }
                           />
                         </div>

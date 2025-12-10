@@ -219,16 +219,22 @@ const AddToCart = ({
         hasVariations,
         selectedVariation,
       });
-      console.log('[AddToCart] GraphQL URL:', process.env.NEXT_PUBLIC_GRAPHQL_URL);
+      console.log('[AddToCart] GraphQL URL (env var):', process.env.NEXT_PUBLIC_GRAPHQL_URL);
+      console.log('[AddToCart] Using proxy:', typeof window !== 'undefined' ? '/api/graphql-proxy' : 'SSR - direct URL');
       console.log('[AddToCart] Mutation definition:', ADD_TO_CART);
     }
 
     // Call the mutation with the correct input
+    console.log('[AddToCart] Calling addToCart mutation...');
     addToCart({
       variables: {
         input,
       },
-    }).catch((error) => {
+    })
+    .then((result) => {
+      console.log('[AddToCart] Mutation successful:', result);
+    })
+    .catch((error) => {
       if (process.env.NODE_ENV === 'development') {
         console.error('[AddToCart] Mutation failed:', error);
       }

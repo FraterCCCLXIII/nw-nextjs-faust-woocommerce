@@ -35,7 +35,7 @@ const ResearchPostCard = ({ post }: ResearchPostCardProps) => {
   const imageUrl = post.featuredImage?.node?.sourceUrl;
   const hasImage = imageUrl && !imageError;
   const isLocalhost =
-    imageUrl?.includes('localhost') || imageUrl?.includes('127.0.0.1');
+    imageUrl?.includes('localhost') || imageUrl?.includes('127.0.0.1') || imageUrl?.includes('moleculestore.local');
 
   return (
     <Link href={`/articles/${post.slug}`}>

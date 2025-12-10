@@ -94,27 +94,29 @@ function getErrorMessage(error: any): string {
 export async function login(username: string, password: string) {
   console.log('[Auth] Starting login process...', { username: username.substring(0, 3) + '***' });
   try {
-    // Use the shared Apollo client to ensure cache is updated
-    console.log('[Auth] Calling login mutation...');
-    const { data, errors } = await client.mutate({
-      mutation: LOGIN_USER,
-      variables: { username, password },
-      fetchPolicy: 'no-cache', // Don't use cache for login
-      errorPolicy: 'all',
+    // Use API route since GraphQL loginWithCookies mutation is not available
+    console.log('[Auth] Calling login API endpoint...');
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ username, password }),
     });
 
-    console.log('[Auth] Login mutation response:', { 
-      hasData: !!data, 
-      hasErrors: !!errors,
-      errors: errors?.map(e => e.message),
-      loginResult: data?.loginWithCookies 
+    const loginResult = await response.json();
+
+    console.log('[Auth] Login API response:', { 
+      status: response.status,
+      success: loginResult.success,
+      statusCode: loginResult.status
     });
 
-    const loginResult = data?.loginWithCookies;
-
-    if (!loginResult) {
-      console.error('[Auth] No login result in response:', { data, errors });
-      throw new Error('Login failed. No response from server.');
+    if (!response.ok || !loginResult.success) {
+      const errorMessage = loginResult.error || 'Login failed. Please check your credentials and try again.';
+      console.error('[Auth] Login failed:', errorMessage);
+      throw new Error(errorMessage);
     }
 
     if (loginResult.status !== 'SUCCESS') {
@@ -179,7 +181,7 @@ export async function login(username: string, password: string) {
 
     // On successful login, cookies are automatically set by the server
     console.log('[Auth] Login complete, returning success');
-    return { success: true, status: loginResult.status };
+    return { success: true, status: loginResult.status || 'SUCCESS' };
   } catch (error: unknown) {
     console.error('[Auth] Login error:', error);
     const userFriendlyMessage = getErrorMessage(error);
@@ -273,6 +275,25 @@ function clearAllCookies() {
 export async function logout() {
   console.log('[Auth] ========== LOGOUT STARTED ==========');
   try {
+    // Step 0: Call server-side logout API to clear WordPress cookies
+    // This is critical because WordPress cookies may be HttpOnly or set for different domains
+    console.log('[Auth] Step 0: Calling server-side logout API...');
+    try {
+      const logoutResponse = await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include', // Include cookies
+      });
+      
+      if (logoutResponse.ok) {
+        const logoutData = await logoutResponse.json();
+        console.log('[Auth] Step 0: Server-side logout successful:', logoutData);
+      } else {
+        console.warn('[Auth] Step 0: Server-side logout returned non-OK status:', logoutResponse.status);
+      }
+    } catch (apiError) {
+      console.warn('[Auth] Step 0: Server-side logout API error (continuing with client-side cleanup):', apiError);
+    }
+
     // Step 1: Attempt logout mutation (optional - may not be available in all WPGraphQL setups)
     // For cookie-based auth, server-side logout mutation is optional since cookies are cleared client-side
     console.log('[Auth] Step 1: Attempting logout mutation (optional for cookie-based auth)...');
@@ -379,16 +400,12 @@ export async function logout() {
       console.log('[Auth] Redirect URL:', redirectUrl);
       console.log('[Auth] Current URL:', window.location.href);
       
-      // TEMPORARILY DISABLED: Prevent redirect to capture logs
-      console.log('[Auth] REDIRECT DISABLED FOR DEBUGGING - Logout completed!');
-      console.log('[Auth] Would redirect to:', redirectUrl);
-      
-      // setTimeout(() => {
-      //   console.log('[Auth] Step 6: Executing redirect now...');
-      //   // Use replace to prevent back button from going to account page
-      //   // Add timestamp to prevent caching
-      //   window.location.replace(redirectUrl);
-      // }, 100);
+      setTimeout(() => {
+        console.log('[Auth] Step 6: Executing redirect now...');
+        // Use replace to prevent back button from going to account page
+        // Add timestamp to prevent caching
+        window.location.replace(redirectUrl);
+      }, 100);
     }
     
     console.log('[Auth] ========== LOGOUT COMPLETED ==========');
@@ -416,13 +433,9 @@ export async function logout() {
     
     // Always redirect to home page even on error
     if (typeof window !== 'undefined') {
-      // TEMPORARILY DISABLED: Prevent redirect to capture logs
-      console.log('[Auth] ERROR HANDLER: REDIRECT DISABLED FOR DEBUGGING');
-      console.log('[Auth] ERROR HANDLER: Would redirect to: /?logout=success&t=' + Date.now());
-      
-      // setTimeout(() => {
-      //   window.location.replace('/?logout=success&t=' + Date.now());
-      // }, 100);
+      setTimeout(() => {
+        window.location.replace('/?logout=success&t=' + Date.now());
+      }, 100);
     }
   }
 }

@@ -63,7 +63,7 @@ const ImageGallery = ({ images }: ImageGalleryProps) => {
                     objectFit: 'cover',
                   }}
                   onError={() => handleImageError(index)}
-                  unoptimized={image.sourceUrl?.includes('localhost') || image.sourceUrl?.includes('127.0.0.1')}
+                  unoptimized={image.sourceUrl?.includes('localhost') || image.sourceUrl?.includes('127.0.0.1') || image.sourceUrl?.includes('moleculestore.local')}
                 />
               )}
             </div>

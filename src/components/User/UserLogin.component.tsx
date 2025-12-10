@@ -80,23 +80,21 @@ const UserLogin = () => {
         const returnUrl = typeof window !== 'undefined' ? sessionStorage.getItem('loginReturnUrl') : null;
         console.log('[UserLogin] Return URL:', returnUrl);
         
-        // TEMPORARILY DISABLED: Prevent redirect to capture logs
-        console.log('[UserLogin] REDIRECT DISABLED FOR DEBUGGING - Login successful!');
-        console.log('[UserLogin] Would redirect to:', returnUrl && returnUrl !== '/login' && returnUrl !== '/account' ? `${returnUrl}?login=success` : '/account?login=success');
-        
-        // if (returnUrl && returnUrl !== '/login' && returnUrl !== '/account') {
-        //   // Clear return URL and redirect
-        //   if (typeof window !== 'undefined') {
-        //     sessionStorage.removeItem('loginReturnUrl');
-        //   }
-        //   console.log('[UserLogin] Redirecting to return URL:', returnUrl);
-        //   // Use replace with a query param to signal successful login
-        //   router.replace(`${returnUrl}?login=success`);
-        // } else {
-        //   console.log('[UserLogin] Redirecting to /account');
-        //   // Use replace with query param to signal successful login
-        //   router.replace('/account?login=success');
-        // }
+        // Redirect to account page or return URL
+        if (returnUrl && returnUrl !== '/login') {
+          // Clear return URL and redirect
+          if (typeof window !== 'undefined') {
+            sessionStorage.removeItem('loginReturnUrl');
+          }
+          // Check if returnUrl already has query params
+          const hasQuery = returnUrl.includes('?');
+          const redirectUrl = hasQuery ? `${returnUrl}&login=success` : `${returnUrl}?login=success`;
+          console.log('[UserLogin] Redirecting to return URL:', redirectUrl);
+          router.replace(redirectUrl);
+        } else {
+          console.log('[UserLogin] Redirecting to /account');
+          router.replace('/account?login=success');
+        }
       } else {
         console.error('[UserLogin] Login result indicates failure:', result);
         throw new Error('Failed to login');

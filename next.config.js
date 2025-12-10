@@ -18,6 +18,11 @@ const nextConfig = {
         pathname: '**',
       },
       {
+        protocol: 'http',
+        hostname: 'moleculestore.local',
+        pathname: '**',
+      },
+      {
         protocol: 'https',
         hostname: 'swewoocommerce.dfweb.no',
         pathname: '**',

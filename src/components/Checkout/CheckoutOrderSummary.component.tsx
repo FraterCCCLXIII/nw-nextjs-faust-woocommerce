@@ -64,7 +64,8 @@ const CheckoutOrderSummary = ({ className = '' }: CheckoutOrderSummaryProps) => 
                     className="rounded object-cover"
                     unoptimized={
                       item.product.node.image?.sourceUrl?.includes('localhost') ||
-                      item.product.node.image?.sourceUrl?.includes('127.0.0.1')
+                      item.product.node.image?.sourceUrl?.includes('127.0.0.1') ||
+                      item.product.node.image?.sourceUrl?.includes('moleculestore.local')
                     }
                   />
                 </div>

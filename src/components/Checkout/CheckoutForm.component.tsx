@@ -2,9 +2,10 @@
 // Imports
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, ApolloError } from '@apollo/client';
-import { getApolloAuthClient, useAuth } from '@faustwp/core';
+// import { getApolloAuthClient, useAuth } from '@faustwp/core'; // Replaced with direct GraphQL query
 import { loadStripe, Stripe, StripeElements } from '@stripe/stripe-js';
 import client from '@/utils/apollo/ApolloClient';
+import { GET_CURRENT_USER } from '@/utils/gql/GQL_QUERIES';
 
 // Components
 import Billing from './Billing.component';
@@ -135,12 +136,16 @@ const CheckoutForm = () => {
   const [orderCompleted, setorderCompleted] = useState<boolean>(false);
   const [completedOrder, setCompletedOrder] = useState<OrderResponse['checkout']['order'] | null>(null);
   
-  // Initialize Faust.js authentication to ensure session is established
-  const { isAuthenticated, isReady } = useAuth({
-    strategy: 'local',
-    loginPageUrl: '/login-faust',
-    shouldRedirect: false, // Don't redirect on checkout page
+  // Check authentication using direct GraphQL query (cookie-based)
+  const { data: authData, loading: authLoading } = useQuery(GET_CURRENT_USER, {
+    errorPolicy: 'all',
+    fetchPolicy: 'network-only', // Always check fresh status
   });
+  
+  const isAuthenticated = !!authData?.customer && 
+                         authData.customer.id !== 'guest' && 
+                         authData.customer.id !== 'cGd1ZXN0';
+  const isReady = !authLoading;
   
   // Stripe payment processing state
   const [stripeClientSecret, setStripeClientSecret] = useState<string>('');
@@ -185,13 +190,12 @@ const CheckoutForm = () => {
     }
   }, [cartError]);
 
-  // Checkout GraphQL mutation - use authenticated client if user is logged in, otherwise use regular client
+  // Checkout GraphQL mutation - use regular client (cookies are automatically included)
   // This ensures the order is associated with the logged-in user when authenticated
-  const authClient = isAuthenticated && isReady ? getApolloAuthClient() : client;
   const [checkout, { loading: checkoutLoading, data: checkoutData, error: checkoutError }] = useMutation<OrderResponse>(
     CHECKOUT_MUTATION,
     {
-      client: authClient, // Use authenticated client if logged in, regular client for guests
+      // Use regular client - cookies handle authentication automatically
       variables: {
         input: orderData,
       },
@@ -212,8 +216,19 @@ const CheckoutForm = () => {
   // Log errors for debugging
   useEffect(() => {
     if (checkoutError) {
-      setRequestError(checkoutError);
+      // Provide more user-friendly error messages
+      let errorMessage = checkoutError.message;
+      if (checkoutError.message?.includes('Invalid payment method') || 
+          checkoutError.message?.includes('payment method')) {
+        errorMessage = 'The selected payment method is not available. Please select a different payment method or contact support.';
+      }
+      setRequestError(new Error(errorMessage) as ApolloError);
       console.error('[CheckoutForm] Checkout mutation error:', checkoutError);
+      console.error('[CheckoutForm] Error details:', {
+        message: checkoutError.message,
+        graphQLErrors: checkoutError.graphQLErrors,
+        networkError: checkoutError.networkError,
+      });
       refetch();
     }
   }, [checkoutError, refetch]);
@@ -226,8 +241,52 @@ const CheckoutForm = () => {
 
   useEffect(() => {
     if (null !== orderData) {
+      // Log the mutation variables being sent
+      console.log('[CheckoutForm] Executing checkout mutation with data:', orderData);
+      
       // Perform checkout mutation when the value for orderData changes.
-      checkout();
+      checkout({
+        variables: {
+          input: orderData,
+        },
+      }).then((result) => {
+        console.log('[CheckoutForm] Checkout mutation result:', result);
+        if (result.data?.checkout?.order) {
+          console.log('[CheckoutForm] ✅ Checkout successful! Order ID:', result.data.checkout.order.databaseId);
+        } else if (result.data?.checkout?.result) {
+          console.log('[CheckoutForm] ⚠️ Checkout result:', result.data.checkout.result);
+          if (result.data.checkout.redirect) {
+            console.log('[CheckoutForm] Redirect URL:', result.data.checkout.redirect);
+          }
+        }
+        if (result.errors) {
+          console.error('[CheckoutForm] GraphQL errors:', result.errors);
+          result.errors.forEach((err: any) => {
+            console.error('[CheckoutForm] Error details:', {
+              message: err.message,
+              extensions: err.extensions,
+              path: err.path,
+            });
+          });
+        }
+      }).catch((error) => {
+        console.error('[CheckoutForm] Checkout mutation error:', error);
+        console.error('[CheckoutForm] Error details:', {
+          message: error.message,
+          graphQLErrors: error.graphQLErrors,
+          networkError: error.networkError,
+        });
+        if (error.graphQLErrors) {
+          error.graphQLErrors.forEach((err: any) => {
+            console.error('[CheckoutForm] GraphQL error:', {
+              message: err.message,
+              extensions: err.extensions,
+              path: err.path,
+            });
+          });
+        }
+      });
+      
       setTimeout(() => {
         refetch();
       }, 2000);
@@ -239,6 +298,12 @@ const CheckoutForm = () => {
   }, [refetch]);
 
   const handleFormSubmit = async (submitData: ICheckoutDataProps) => {
+    // Validate payment method is provided
+    if (!submitData.paymentMethod || submitData.paymentMethod.trim() === '') {
+      setRequestError(new Error('Please select a payment method') as ApolloError);
+      return;
+    }
+
     // Ensure all required fields have defaults
     const formData: ICheckoutDataProps = {
       ...submitData,
@@ -246,8 +311,10 @@ const CheckoutForm = () => {
       country: submitData.country || 'US',
       state: submitData.state || '',
       company: submitData.company || '',
-      paymentMethod: submitData.paymentMethod || 'bacs',
+      paymentMethod: submitData.paymentMethod, // Don't default to 'bacs' - require explicit selection
     };
+    
+    console.log('[CheckoutForm] Submitting with payment method:', formData.paymentMethod);
     
     // Note: If user is logged in (cookies are set), WooCommerce GraphQL will automatically
     // associate this order with the user's account. The checkout mutation uses cookie-based
@@ -333,6 +400,18 @@ const CheckoutForm = () => {
     }
     
     const checkOutData = createCheckoutData(formData);
+    
+    // Log the checkout payload for debugging
+    console.log('[CheckoutForm] Checkout payload being sent:', {
+      paymentMethod: checkOutData.paymentMethod,
+      billing: checkOutData.billing,
+      shipping: checkOutData.shipping,
+      metaData: checkOutData.metaData,
+      isPaid: checkOutData.isPaid,
+      transactionId: checkOutData.transactionId,
+      fullPayload: checkOutData,
+    });
+    
     setOrderData(checkOutData);
     setRequestError(null);
   };

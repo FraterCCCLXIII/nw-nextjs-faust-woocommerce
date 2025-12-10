@@ -35,7 +35,7 @@ const ProductCard = ({
   const formattedSalePrice = salePrice ? paddedPrice(salePrice, 'kr') : undefined;
 
   const hasImage = image?.sourceUrl && !imageError;
-  const isLocalhost = image?.sourceUrl?.includes('localhost') || image?.sourceUrl?.includes('127.0.0.1');
+  const isLocalhost = image?.sourceUrl?.includes('localhost') || image?.sourceUrl?.includes('127.0.0.1') || image?.sourceUrl?.includes('moleculestore.local');
 
   return (
     <div className="group">

@@ -96,7 +96,8 @@ const DynamicPage: NextPage<PageProps> = ({
                   onError={() => setImageError(true)}
                   unoptimized={
                     page.featuredImage.node.sourceUrl.includes('localhost') ||
-                    page.featuredImage.node.sourceUrl.includes('127.0.0.1')
+                    page.featuredImage.node.sourceUrl.includes('127.0.0.1') ||
+                    page.featuredImage.node.sourceUrl.includes('moleculestore.local')
                   }
                 />
               </div>

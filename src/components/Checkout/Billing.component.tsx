@@ -21,7 +21,7 @@ import BillingAddressFields from './BillingAddressFields.component';
 
 // GraphQL
 import { GET_CURRENT_USER } from '@/utils/gql/GQL_QUERIES';
-import { getApolloAuthClient } from '@faustwp/core';
+// import { getApolloAuthClient } from '@faustwp/core'; // Removed Faust.js auth client
 
 // Constants
 import { INPUT_FIELDS } from '@/utils/constants/INPUT_FIELDS';
@@ -86,10 +86,10 @@ const Billing = ({
   const [stripePaymentReady, setStripePaymentReady] = useState<boolean>(false);
   const [fieldsPopulated, setFieldsPopulated] = useState(false);
   
-  // Query user data to auto-populate form using Faust.js authenticated client
-  const authClient = getApolloAuthClient(); // Get authenticated Apollo client from Faust.js
+  // Query user data to auto-populate form using regular client (cookies handle authentication)
+  // const authClient = getApolloAuthClient(); // Removed Faust.js auth client
   const { data: userData, loading: userDataLoading, error: userDataError, refetch: refetchUser } = useQuery(GET_CURRENT_USER, {
-    client: authClient, // Use authenticated client - automatically includes auth tokens
+    // Use regular client - cookies are automatically included for authentication
     errorPolicy: 'all',
     fetchPolicy: 'network-only', // Always fetch from network to ensure fresh data
     notifyOnNetworkStatusChange: true,

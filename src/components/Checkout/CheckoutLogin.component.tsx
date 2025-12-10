@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@apollo/client';
 import { useRouter } from 'next/router';
-import { useLogin, useLogout, useAuth, getApolloAuthClient } from '@faustwp/core';
+// import { useLogin, useLogout, useAuth, getApolloAuthClient } from '@faustwp/core'; // Replaced with custom auth
 import { GET_CURRENT_USER } from '@/utils/gql/GQL_QUERIES';
+import { login as customLogin, logout as customLogout } from '@/utils/auth';
 import Button from '@/components/UI/Button.component';
 
 interface CheckoutLoginProps {
@@ -22,26 +23,18 @@ const CheckoutLogin = ({ onLoginSuccess }: CheckoutLoginProps) => {
   const [showLogin, setShowLogin] = useState(false);
   const router = useRouter();
 
-  // Faust.js authentication hooks
-  const { isAuthenticated, isReady } = useAuth({
-    strategy: 'local',
-    loginPageUrl: '/login-faust', // Required for local strategy
-    shouldRedirect: false, // Don't redirect on checkout page
-  });
+  // Use direct GraphQL query for authentication status (cookie-based)
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [logoutLoading, setLogoutLoading] = useState(false);
   
-  const { login: faustLogin, loading: loginLoading, data: loginData, error: loginError } = useLogin();
-  const { logout: faustLogout, loading: logoutLoading } = useLogout();
-
-  // Get authenticated Apollo client for user data
-  const authClient = getApolloAuthClient();
-  const { data, refetch } = useQuery(GET_CURRENT_USER, {
-    client: authClient, // Use authenticated client
+  const { data, refetch, loading: userLoading } = useQuery(GET_CURRENT_USER, {
+    // Use regular client - cookies are automatically included
     errorPolicy: 'all',
-    fetchPolicy: 'cache-and-network',
+    fetchPolicy: 'network-only', // Always check fresh status
   });
 
   const customer = data?.customer;
-  const isLoggedIn = isAuthenticated && !!customer && customer?.id !== 'guest' && customer?.id !== 'cGd1ZXN0';
+  const isLoggedIn = !!customer && customer?.id !== 'guest' && customer?.id !== 'cGd1ZXN0';
 
   // Get user display name (firstName + lastName, or email, or username)
   const getUserDisplayName = () => {
@@ -60,57 +53,20 @@ const CheckoutLogin = ({ onLoginSuccess }: CheckoutLoginProps) => {
     return 'User';
   };
 
-  // Handle logout using Faust.js
+  // Handle logout using custom logout function
   const handleLogout = async () => {
     try {
-      console.log('[CheckoutLogin] Logging out using Faust.js...');
-      await faustLogout();
+      setLogoutLoading(true);
+      console.log('[CheckoutLogin] Logging out...');
+      await customLogout();
       console.log('[CheckoutLogin] Logout successful');
-      // Refetch to update UI
-      await refetch();
       // Reload page to clear form data
       router.reload();
     } catch (error) {
       console.error('[CheckoutLogin] Logout error:', error);
+      setLogoutLoading(false);
     }
   };
-
-  // Handle login response from Faust.js (same pattern as login-faust.tsx)
-  useEffect(() => {
-    if (loginData?.generateAuthorizationCode) {
-      if (loginData.generateAuthorizationCode.error) {
-        setError(loginData.generateAuthorizationCode.error);
-      } else if (loginData.generateAuthorizationCode.code) {
-        // Login successful - complete the login flow by calling login again
-        console.log('[CheckoutLogin] Authorization code received, completing login...');
-        const returnUrl = router.asPath;
-        faustLogin(username, password, returnUrl);
-        
-        // After successful login, refetch user data and call success callback
-        setTimeout(async () => {
-          try {
-            await refetch();
-            if (onLoginSuccess) {
-              console.log('[CheckoutLogin] Calling onLoginSuccess callback...');
-              onLoginSuccess();
-            }
-            setShowLogin(false);
-            setUsername('');
-            setPassword('');
-          } catch (err) {
-            console.warn('[CheckoutLogin] Error refetching after login:', err);
-          }
-        }, 500);
-      }
-    }
-  }, [loginData, username, password, faustLogin, router, refetch, onLoginSuccess]);
-
-  // Handle login errors
-  useEffect(() => {
-    if (loginError) {
-      setError(loginError.message || 'Login failed. Please try again.');
-    }
-  }, [loginError]);
 
   // Show logged in message if user is logged in
   if (isLoggedIn) {
@@ -154,11 +110,34 @@ const CheckoutLogin = ({ onLoginSuccess }: CheckoutLoginProps) => {
     }
     
     setError(null);
+    setLoginLoading(true);
 
-    console.log('[CheckoutLogin] Starting login with Faust.js...', { username: username.substring(0, 3) + '***' });
+    console.log('[CheckoutLogin] Starting login...', { username: username.substring(0, 3) + '***' });
 
-    // Use Faust.js login - this will trigger generateAuthorizationCode mutation
-    faustLogin(username.trim(), password.trim(), router.asPath);
+    try {
+      // Use custom login function (cookie-based)
+      const result = await customLogin(username.trim(), password.trim());
+      
+      if (result.success) {
+        console.log('[CheckoutLogin] Login successful');
+        // Refetch user data
+        await refetch();
+        if (onLoginSuccess) {
+          console.log('[CheckoutLogin] Calling onLoginSuccess callback...');
+          onLoginSuccess();
+        }
+        setShowLogin(false);
+        setUsername('');
+        setPassword('');
+      } else {
+        setError(result.error || 'Login failed. Please try again.');
+      }
+    } catch (err: any) {
+      console.error('[CheckoutLogin] Login error:', err);
+      setError(err.message || 'Login failed. Please try again.');
+    } finally {
+      setLoginLoading(false);
+    }
   };
 
 

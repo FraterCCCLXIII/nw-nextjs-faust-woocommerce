@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useLogout } from '@faustwp/core';
+// import { useLogout } from '@faustwp/core'; // Replaced with custom logout
 import { useState, useEffect } from 'react';
+import { logout } from '@/utils/auth'; // Use custom logout function
 
 interface AccountNavItem {
   id: string;
@@ -28,7 +29,7 @@ const AccountNavigation = ({ activeEndpoint = 'dashboard' }: AccountNavigationPr
   const router = useRouter();
   const currentPath = router.pathname;
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const { logout, loading: logoutLoading } = useLogout(); // Use Faust.js useLogout
+  // const { logout, loading: logoutLoading } = useLogout(); // Replaced with custom logout
 
   // Determine active item based on hash or fallback
   const getActiveItem = () => {
@@ -88,11 +89,14 @@ const AccountNavigation = ({ activeEndpoint = 'dashboard' }: AccountNavigationPr
     console.log('[AccountNav] Logout button clicked');
     setIsLoggingOut(true);
     try {
-      console.log('[AccountNav] Calling Faust.js logout function...');
-      await logout('/'); // Redirect to homepage after logout
-      console.log('[AccountNav] Faust.js logout function completed');
+      console.log('[AccountNav] Calling custom logout function...');
+      // The custom logout function handles all cleanup and redirects
+      await logout();
+      console.log('[AccountNav] Custom logout function completed');
+      // Note: logout() performs a full page redirect, so code after this won't execute
     } catch (error) {
       console.error('[AccountNav] Logout error:', error);
+      // Even on error, logout should redirect, but reset state just in case
       setIsLoggingOut(false);
     }
   };
@@ -169,14 +173,14 @@ const AccountNavigation = ({ activeEndpoint = 'dashboard' }: AccountNavigationPr
         <li className="woocommerce-MyAccount-navigation-link woocommerce-MyAccount-navigation-link--customer-logout">
           <button
             onClick={handleLogout}
-            disabled={isLoggingOut || logoutLoading} // Use Faust.js loading state
+            disabled={isLoggingOut} // Use custom loading state
             className={`w-full text-left px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-              isLoggingOut || logoutLoading
+              isLoggingOut
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                 : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
             }`}
           >
-            {isLoggingOut || logoutLoading ? 'Logging out...' : 'Log out'}
+            {isLoggingOut ? 'Logging out...' : 'Log out'}
           </button>
         </li>
       </ul>

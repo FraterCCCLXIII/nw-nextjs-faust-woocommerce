@@ -1,20 +1,20 @@
 import { useQuery } from '@apollo/client';
 import Link from 'next/link';
-import { getApolloAuthClient } from '@faustwp/core';
+// import { getApolloAuthClient } from '@faustwp/core'; // Removed Faust.js auth client
 import { GET_CURRENT_USER, GET_CUSTOMER_ORDERS } from '@/utils/gql/GQL_QUERIES';
 import LoadingSpinner from '../LoadingSpinner/LoadingSpinner.component';
 
 const AccountDashboard = () => {
-  const authClient = getApolloAuthClient(); // Get authenticated client
+  // const authClient = getApolloAuthClient(); // Removed Faust.js auth client
   
   const { data: customerData, loading: customerLoading } = useQuery(GET_CURRENT_USER, {
-    client: authClient, // Use authenticated client
+    // client: authClient, // Removed client specific to Faust.js auth
     fetchPolicy: 'network-only',
     errorPolicy: 'all',
   });
 
   const { data: ordersData, loading: ordersLoading } = useQuery(GET_CUSTOMER_ORDERS, {
-    client: authClient, // Use authenticated client
+    // client: authClient, // Removed client specific to Faust.js auth
     fetchPolicy: 'network-only',
     errorPolicy: 'all',
   });

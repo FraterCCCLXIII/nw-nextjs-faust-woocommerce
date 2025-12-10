@@ -1,7 +1,7 @@
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
-import { useAuth, getApolloAuthClient } from '@faustwp/core';
+import { getApolloAuthClient } from '@faustwp/core';
 import Layout from '@/components/Layout/Layout.component';
 import AccountNavigation from '@/components/User/AccountNavigation.component';
 import AccountDashboard from '@/components/User/AccountDashboard.component';
@@ -19,23 +19,25 @@ const CustomerAccountPage: NextPage = () => {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<string>('my-details');
   
-  // Faust.js authentication hooks
-  const { isAuthenticated, isReady, loginUrl } = useAuth({
-    strategy: 'local',
-    loginPageUrl: '/login-faust',
-    shouldRedirect: true,
+  // Check authentication using GET_CURRENT_USER query (works with cookie-based auth)
+  const { data: userData, loading: userLoading } = useQuery(GET_CURRENT_USER, {
+    errorPolicy: 'all',
+    fetchPolicy: 'network-only', // Always check server-side authentication
   });
+  
+  const customer = userData?.customer;
+  const isAuthenticated = !!customer && customer?.id !== 'guest' && customer?.id !== 'cGd1ZXN0';
   
   // Redirect to login if not authenticated (after auth check is ready)
   useEffect(() => {
-    if (isReady && !isAuthenticated && loginUrl) {
+    if (!userLoading && !isAuthenticated) {
       // Store current URL for redirect after login
       if (typeof window !== 'undefined') {
         sessionStorage.setItem('loginReturnUrl', router.asPath);
       }
-      router.push(loginUrl);
+      router.push('/login');
     }
-  }, [isReady, isAuthenticated, loginUrl, router]);
+  }, [userLoading, isAuthenticated, router]);
   
   // Handle hash-based navigation
   useEffect(() => {
@@ -82,15 +84,7 @@ const CustomerAccountPage: NextPage = () => {
     console.log('[Account] Active tab state changed to:', activeTab);
   }, [activeTab]);
   
-  // Get user data for avatar
-  const authClient = getApolloAuthClient(); // Get authenticated client
-  const { data: userData } = useQuery(GET_CURRENT_USER, {
-    client: authClient, // Use authenticated client
-    errorPolicy: 'all',
-    fetchPolicy: 'cache-and-network',
-  });
-  
-  const customer = userData?.customer;
+  // Customer data is already fetched above for authentication check
   const avatar = null; // Avatar field removed from GraphQL query
   const firstName = customer?.firstName || customer?.email || 'User';
 
@@ -113,6 +107,24 @@ const CustomerAccountPage: NextPage = () => {
         return <AccountDashboard />;
     }
   };
+
+  // Show loading state while checking authentication
+  if (userLoading) {
+    return (
+      <Layout title="My account">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-gray-600">Loading...</div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Don't render if not authenticated (redirect will happen)
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <Layout title="My account">

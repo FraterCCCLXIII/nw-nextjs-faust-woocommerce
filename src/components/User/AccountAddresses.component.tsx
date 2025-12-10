@@ -1,6 +1,6 @@
 import { useQuery, useMutation } from '@apollo/client';
 import { useState, useEffect } from 'react';
-import { getApolloAuthClient } from '@faustwp/core';
+// import { getApolloAuthClient } from '@faustwp/core'; // Removed Faust.js auth client
 import { GET_CURRENT_USER } from '@/utils/gql/GQL_QUERIES';
 import { UPDATE_CUSTOMER } from '@/utils/gql/GQL_MUTATIONS';
 import LoadingSpinner from '../LoadingSpinner/LoadingSpinner.component';
@@ -19,16 +19,16 @@ interface AddressFormData {
 }
 
 const AccountAddresses = () => {
-  const authClient = getApolloAuthClient(); // Get authenticated client
+  // const authClient = getApolloAuthClient(); // Removed Faust.js auth client
   
   const { data, loading, error, refetch } = useQuery(GET_CURRENT_USER, {
-    client: authClient, // Use authenticated client
+    // client: authClient, // Removed client specific to Faust.js auth
     fetchPolicy: 'network-only',
     errorPolicy: 'all',
   });
 
   const [updateCustomer, { loading: updating }] = useMutation(UPDATE_CUSTOMER, {
-    client: authClient, // Use authenticated client
+    // client: authClient, // Removed client specific to Faust.js auth
   });
 
   const [editingAddress, setEditingAddress] = useState<'billing' | 'shipping' | null>(null);
@@ -110,26 +110,79 @@ const AccountAddresses = () => {
 
     try {
       const input: any = {};
+      
+      // Prepare address data - only include non-empty fields
       if (type === 'billing') {
-        input.billing = billingForm;
+        input.billing = {
+          firstName: billingForm.firstName || '',
+          lastName: billingForm.lastName || '',
+          address1: billingForm.address1 || '',
+          address2: billingForm.address2 || '',
+          city: billingForm.city || '',
+          postcode: billingForm.postcode || '',
+          country: billingForm.country || '',
+          state: billingForm.state || '',
+          email: billingForm.email || '',
+          phone: billingForm.phone || '',
+        };
       } else {
-        input.shipping = shippingForm;
+        input.shipping = {
+          firstName: shippingForm.firstName || '',
+          lastName: shippingForm.lastName || '',
+          address1: shippingForm.address1 || '',
+          address2: shippingForm.address2 || '',
+          city: shippingForm.city || '',
+          postcode: shippingForm.postcode || '',
+          country: shippingForm.country || '',
+          state: shippingForm.state || '',
+        };
       }
 
-      const { data: updateData } = await updateCustomer({
+      console.log(`[AccountAddresses] Updating ${type} address with input:`, JSON.stringify(input, null, 2));
+
+      const { data: updateData, errors } = await updateCustomer({
         variables: { input },
       });
+
+      console.log(`[AccountAddresses] Update ${type} address response:`, {
+        hasData: !!updateData,
+        hasErrors: !!errors,
+        errors: errors?.map((e: any) => e.message),
+        customer: updateData?.updateCustomer?.customer,
+      });
+
+      if (errors && errors.length > 0) {
+        const errorMessages = errors.map((e: any) => e.message).join(', ');
+        console.error(`[AccountAddresses] GraphQL errors updating ${type} address:`, errorMessages);
+        setUpdateError(errorMessages || `Failed to update ${type} address. Please try again.`);
+        return;
+      }
 
       if (updateData?.updateCustomer?.customer) {
         setUpdateMessage(`${type === 'billing' ? 'Billing' : 'Shipping'} address updated successfully!`);
         setEditingAddress(null);
         await refetch();
       } else {
+        console.error(`[AccountAddresses] No customer data in response for ${type} address update`);
         setUpdateError(`Failed to update ${type} address. Please try again.`);
       }
     } catch (err: any) {
-      console.error(`Error updating ${type} address:`, err);
-      setUpdateError(err.message || `Failed to update ${type} address. Please try again.`);
+      console.error(`[AccountAddresses] Error updating ${type} address:`, err);
+      console.error(`[AccountAddresses] Error details:`, {
+        message: err.message,
+        graphQLErrors: err.graphQLErrors,
+        networkError: err.networkError,
+      });
+      
+      // Extract more detailed error message
+      let errorMessage = err.message || `Failed to update ${type} address. Please try again.`;
+      if (err.graphQLErrors && err.graphQLErrors.length > 0) {
+        errorMessage = err.graphQLErrors.map((e: any) => e.message).join(', ');
+      } else if (err.networkError) {
+        errorMessage = err.networkError.message || errorMessage;
+      }
+      
+      setUpdateError(errorMessage);
     }
   };
 

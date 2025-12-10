@@ -311,7 +311,7 @@ const BlockComponent = ({ block }: { block: Block }) => {
               fill
               className="object-cover rounded-lg"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 800px"
-              unoptimized={imageUrl.includes('localhost') || imageUrl.includes('127.0.0.1')}
+              unoptimized={imageUrl.includes('localhost') || imageUrl.includes('127.0.0.1') || imageUrl.includes('moleculestore.local')}
             />
           </div>
           {attrs.caption && (
@@ -334,7 +334,7 @@ const BlockComponent = ({ block }: { block: Block }) => {
                 fill
                 className="object-cover rounded-lg"
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                unoptimized={img.url?.includes('localhost') || img.url?.includes('127.0.0.1')}
+                unoptimized={img.url?.includes('localhost') || img.url?.includes('127.0.0.1') || img.url?.includes('moleculestore.local')}
               />
             </div>
           ))}
