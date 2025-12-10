@@ -3,44 +3,24 @@
 import Link from 'next/link';
 import { useQuery } from '@apollo/client';
 import MobileMenu from './MobileMenu.component';
-import NavDropdown from './NavDropdown.component';
 import SearchTrigger from './SearchTrigger.component';
 import Logo from '@/components/UI/Logo.component';
 import AccountIcon from '@/components/UI/icons/AccountIcon.component';
 import CartIcon from '@/components/UI/icons/CartIcon.component';
+import TextRevealButton from '@/components/UI/TextRevealButton.component';
 import { useCartStore } from '@/stores/cartStore';
-import { GET_CURRENT_USER, GET_PAGES } from '@/utils/gql/GQL_QUERIES';
-import styles from './nav.module.css';
+import { GET_CURRENT_USER } from '@/utils/gql/GQL_QUERIES';
 
-type NavItemLink = {
+type NavItem = {
   name: string;
   href: string;
-  type?: never;
-  items?: never;
 };
 
-type NavItemDropdown = {
-  name: string;
-  type: "dropdown";
-  items: Array<{ name: string; href: string }>;
-  href?: never;
-};
-
-type NavItem = NavItemLink | NavItemDropdown;
-
-// Static nav items - Pages dropdown will be added dynamically
+// Static nav items matching Tether design
 const staticNavItems: NavItem[] = [
-  { name: "Home", href: "/" },
-  { name: "Catalog", href: "/catalog" },
-  { name: "Articles", href: "/articles" },
-  {
-    name: "Resources",
-    type: "dropdown",
-    items: [
-      { name: "Components", href: "/pages/components" },
-    ],
-  },
-  { name: "Contact Us", href: "/pages/contact" },
+  { name: "Overview", href: "#top" },
+  { name: "Features", href: "#features" },
+  { name: "Results", href: "#results" },
 ];
 
 
@@ -60,106 +40,113 @@ const Navbar = () => {
     fetchPolicy: 'network-only', // Always check server for current auth status
   });
 
-  // Fetch pages from WordPress
-  const { data: pagesData } = useQuery(GET_PAGES, {
-    errorPolicy: 'all',
-  });
-
   // Only consider logged in if we have customer data and no error
   // If loading or error, default to not logged in (show login link)
   const loggedIn = !loading && !error && !!data?.customer;
 
-  // Build navigation items with pages dropdown
-  const pages = pagesData?.pages?.nodes || [];
-  const pageItems = pages
-    .filter((page: { slug: string }) => 
-      !['about-us', 'contact', 'components', 'terms-of-service', 'privacy-policy', 'returns-and-refunds'].includes(page.slug)
-    )
-    .map((page: { title: string; uri: string }) => ({
-      name: page.title,
-      href: page.uri || `/pages/${page.title.toLowerCase().replace(/\s+/g, '-')}`,
-    }));
-
-  const mainNavItems: NavItem[] = [
-    ...staticNavItems,
-    ...(pageItems.length > 0 ? [{
-      name: "Pages",
-      type: "dropdown" as const,
-      items: pageItems,
-    }] : []),
-  ];
+  // Handle smooth scroll for anchor links
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (href.startsWith('#')) {
+      e.preventDefault();
+      const targetId = href.replace('#', '');
+      const element = document.getElementById(targetId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else if (targetId === 'top') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+  };
 
   return (
-    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-[20px] border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Grid layout: main-nav | logo | secondary-nav on mobile/tablet, logo | main-nav | secondary-nav on desktop */}
-        <div className={styles.headerGrid}>
-          {/* Main Navigation */}
-          <div className={`${styles.mainNav} flex items-center gap-4`}>
+    <header 
+      id="top"
+      className="sticky top-0 z-50 pt-4 pb-4"
+      role="banner"
+      aria-label="Main Menu"
+    >
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Glass pill wrapper for entire header */}
+        <div className="row flex flex-wrap items-center bg-white/80 backdrop-blur-[20px] rounded-full shadow-lg border border-white/20 px-6 py-3 md:px-8 md:py-4">
+          {/* Logo - Left Column (span_3 equivalent) */}
+          <div className="col span_3 flex-shrink-0 w-full md:w-1/4 lg:w-1/4">
+            <Link href="/" id="logo" className="flex items-center no-image">
+              <span className="sr-only">Tether</span>
+              <Logo className="h-6 md:h-8 w-auto text-tether-dark font-semibold" />
+            </Link>
+          </div>
+
+          {/* Navigation - Right Column (span_9 equivalent) */}
+          <div className="col span_9 col_last flex-1 w-full md:w-3/4 lg:w-3/4 flex items-center justify-end gap-4">
             {/* Mobile Menu Button */}
-            <div className="lg:hidden">
+            <div className="md:hidden">
               <MobileMenu />
             </div>
 
-            {/* Desktop Navigation Links */}
-            <nav className="hidden lg:flex items-center justify-center w-full" role="navigation">
-              <ul className="flex items-center gap-6" role="list">
-                {mainNavItems.map((item) => (
-                  <li key={item.name}>
-                    {item.type === "dropdown" ? (
-                      <NavDropdown label={item.name} items={item.items} />
-                    ) : (
-                      <Link
-                        href={item.href}
-                        className="text-sm hover:text-gray-900 transition-colors font-space-mono"
-                        style={{ fontFamily: "var(--font-space-mono), monospace" }}
-                      >
-                        {item.name}
-                      </Link>
-                    )}
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center" role="navigation" aria-label="Main Menu">
+              <ul className="flex items-center gap-6 lg:gap-8" role="list">
+                {staticNavItems.map((item) => (
+                  <li key={item.name} className="nectar-regular-menu-item">
+                    <Link
+                      href={item.href}
+                      onClick={(e) => handleNavClick(e, item.href)}
+                      className="text-sm font-medium text-tether-dark/70 hover:text-tether-dark transition-colors"
+                    >
+                      <span className="menu-title-text">
+                        <TextRevealButton dataText={item.name}>
+                          {item.name}
+                        </TextRevealButton>
+                      </span>
+                    </Link>
                   </li>
                 ))}
+                {/* Get Started Button - Part of nav list */}
+                <li className="menu-item-btn-style-button_accent-color menu-item-hover-text-reveal nectar-regular-menu-item">
+                  <Link
+                    href="/catalog"
+                    className="inline-flex items-center px-4 py-2 bg-tether-dark text-tether-cream text-sm font-medium rounded-full hover:bg-tether-dark/90 transition-all duration-200"
+                  >
+                    <span className="menu-title-text">
+                      <TextRevealButton dataText="Get Started">
+                        Get Started
+                      </TextRevealButton>
+                    </span>
+                  </Link>
+                </li>
               </ul>
             </nav>
-          </div>
 
-          {/* Logo */}
-          <div className={`${styles.logo} flex items-center justify-start`}>
-            <Link href="/" className="flex items-center">
-              <span className="sr-only">Molecule</span>
-              <Logo className="h-6 w-auto" />
-            </Link>
-          </div>
+            {/* Secondary Actions - Hidden on mobile, shown on desktop */}
+            <div className="hidden lg:flex items-center gap-3 ml-4 pl-4 border-l border-tether-beige/30">
+              {/* Search */}
+              <SearchTrigger />
 
-          {/* Secondary Navigation */}
-          <div className={`${styles.secondaryNav} flex items-center justify-end gap-4`}>
-            {/* Search - Always visible */}
-            <SearchTrigger />
+              {/* Account */}
+              <Link
+                href={loggedIn ? "/account" : "/login"}
+                className="p-2 hover:text-tether-dark transition-colors"
+                aria-label={loggedIn ? "Account" : "Login"}
+              >
+                <span className="sr-only">{loggedIn ? "Account" : "Login"}</span>
+                <AccountIcon />
+              </Link>
 
-            {/* Account - Always visible */}
-            <Link
-              href={loggedIn ? "/account" : "/login"}
-              className="p-2 hover:text-gray-900 transition-colors"
-              aria-label={loggedIn ? "Account" : "Login"}
-            >
-              <span className="sr-only">{loggedIn ? "Account" : "Login"}</span>
-              <AccountIcon />
-            </Link>
-
-            {/* Cart - Always visible */}
-            <Link
-              href="/cart"
-              className="relative p-2 hover:text-gray-900 transition-colors"
-              aria-label="Cart"
-            >
-              <span className="sr-only">Cart</span>
-              <CartIcon />
-              {cartCount > 0 && (
-                <div className="absolute -top-1 -right-1 bg-black text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {cartCount}
-                </div>
-              )}
-            </Link>
+              {/* Cart */}
+              <Link
+                href="/cart"
+                className="relative p-2 hover:text-tether-dark transition-colors"
+                aria-label="Cart"
+              >
+                <span className="sr-only">Cart</span>
+                <CartIcon />
+                {cartCount > 0 && (
+                  <div className="absolute -top-1 -right-1 bg-tether-dark text-tether-cream text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {cartCount}
+                  </div>
+                )}
+              </Link>
+            </div>
           </div>
         </div>
       </div>

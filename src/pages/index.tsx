@@ -1,9 +1,11 @@
 // Components
 import Hero from '@/components/Index/Hero.component';
-import ImageBanner from '@/components/Index/ImageBanner.component';
-import TextSection from '@/components/Index/TextSection.component';
+import HeroThreeColumn from '@/components/Index/HeroThreeColumn.component';
+import TrustIndicators from '@/components/Index/TrustIndicators.component';
+import StickyMediaSections from '@/components/Index/StickyMediaSections.component';
+import TetherFeatures from '@/components/Index/TetherFeatures.component';
+import Testimonials from '@/components/Index/Testimonials.component';
 import ProductCarousel from '@/components/Index/ProductCarousel.component';
-import FeaturesList from '@/components/Index/FeaturesList.component';
 import HomeFAQ from '@/components/Index/HomeFAQ.component';
 import Layout from '@/components/Layout/Layout.component';
 import Link from 'next/link';
@@ -43,26 +45,41 @@ const Index: NextPage = ({
   return (
     <Layout title="Home">
       <div className="min-h-screen">
-        {/* Hero Section with Star Rating and CTA */}
-        <Hero />
+        {/* Hero Section */}
+        <div id="top">
+          <Hero />
+        </div>
         
-        {/* Image Banner Section */}
-        <ImageBanner />
+        {/* Three Column Hero Section */}
+        <HeroThreeColumn />
         
-        {/* Text Section */}
-        <TextSection />
+        {/* Trust Indicators Section */}
+        <div id="results">
+          <TrustIndicators />
+        </div>
+        
+        {/* Sticky Media Sections - Main Features */}
+        <div id="features">
+          <StickyMediaSections />
+        </div>
+        
+        {/* Tether Features Section */}
+        <TetherFeatures />
+        
+        {/* Testimonials Section */}
+        <Testimonials />
         
         {/* Featured Products Carousel Section */}
         {carouselProducts && carouselProducts.length > 0 && (
-          <section className="w-full py-12 md:py-16 bg-white">
+          <section className="w-full py-12 md:py-16 bg-gradient-to-b from-tether-cream to-white">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex items-center justify-between mb-8">
-                <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
+                <h2 className="text-3xl md:text-4xl font-bold text-tether-dark">
                   Featured Products
                 </h2>
                 <Link
                   href="/catalog"
-                  className="text-gray-900 font-semibold hover:text-gray-700 flex items-center gap-2 transition-colors"
+                  className="text-tether-dark font-semibold hover:text-tether-dark/70 flex items-center gap-2 transition-colors"
                 >
                   <span>Shop All</span>
                   <svg
@@ -117,9 +134,6 @@ const Index: NextPage = ({
             </div>
           </div>
         )}
-
-        {/* Features List Section */}
-        <FeaturesList />
 
         {/* FAQ Section */}
         <HomeFAQ />

@@ -16,12 +16,12 @@ interface IHeaderProps {
 const Header = ({ title }: IHeaderProps) => (
   <>
     <Head>
-      <title>{`Next.js webshop with WooCommerce ${title}`}</title>
-      <meta name="description" content="WooCommerce webshop" />
-      <meta name="keywords" content="Ecommerce, WooCommerce" />
+      <title>{`Tether - Building stronger, more connected teams ${title !== 'Home' ? `| ${title}` : ''}`}</title>
+      <meta name="description" content="Building stronger, more connected teams through real-time collaboration, guided team-building exercises, and meaningful rituals." />
+      <meta name="keywords" content="Team collaboration, Team building, Employee engagement, Culture pulse, Recognition" />
       <meta
         property="og:title"
-        content="Nextjs Ecommerce with Woocommerce"
+        content="Tether - Building stronger, more connected teams"
         key="pagetitle"
       />
     </Head>

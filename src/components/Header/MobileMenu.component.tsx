@@ -27,9 +27,10 @@ const CloseIcon = () => (
 );
 
 const menuItems = [
-  { name: "Home", href: "/" },
-  { name: "Catalog", href: "/catalog" },
-  { name: "Contact Us", href: "/pages/contact" },
+  { name: "Overview", href: "#top" },
+  { name: "Features", href: "#features" },
+  { name: "Results", href: "#results" },
+  { name: "Get Started", href: "/catalog", isButton: true },
 ];
 
 const resourcesItems = [
@@ -75,44 +76,73 @@ export default function MobileMenu() {
       />
       <div
         id="header-sidebar-menu"
-        className="fixed left-0 top-0 bottom-0 z-[61] w-80 max-w-[85vw] bg-white shadow-xl lg:hidden"
+        className="fixed left-0 top-0 bottom-0 z-[61] w-80 max-w-[85vw] bg-white shadow-xl lg:hidden border-r border-tether-beige/30"
         role="dialog"
         aria-modal="true"
       >
         <div className="flex flex-col h-full">
-          <div className="flex justify-end p-4">
+          <div className="flex justify-between items-center p-4 border-b border-tether-beige/30 bg-white">
+            <span className="text-lg font-semibold text-tether-dark">Menu</span>
             <button
               aria-label="Close"
               onClick={() => setIsOpen(false)}
-              className="p-2 hover:bg-gray-100 rounded"
+              className="p-2 hover:bg-tether-cream rounded transition-colors"
             >
               <CloseIcon />
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto px-6 py-8">
+          <div className="flex-1 overflow-y-auto px-6 py-8 bg-tether-cream">
             <ul className="space-y-6">
-              {menuItems.map((item) => (
-                <li key={item.name} className="text-2xl">
-                  <Link
-                    href={item.href}
-                    className="block w-full hover:text-gray-600 transition-colors font-space-mono"
-                    style={{ fontFamily: "var(--font-space-mono), monospace" }}
-                    onClick={() => setIsOpen(false)}
-                  >
-                    {item.name}
-                  </Link>
-                </li>
-              ))}
+              {menuItems.map((item) => {
+                const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+                  if (item.href.startsWith('#')) {
+                    e.preventDefault();
+                    setIsOpen(false);
+                    setTimeout(() => {
+                      const targetId = item.href.replace('#', '');
+                      const element = document.getElementById(targetId);
+                      if (element) {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      } else if (targetId === 'top') {
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }
+                    }, 100);
+                  } else {
+                    setIsOpen(false);
+                  }
+                };
+
+                return (
+                  <li key={item.name}>
+                    {item.isButton ? (
+                      <Link
+                        href={item.href}
+                        onClick={handleClick}
+                        className="inline-flex items-center px-6 py-3 bg-tether-dark text-tether-cream text-base font-medium rounded-full hover:bg-tether-dark/90 transition-all duration-200"
+                      >
+                        {item.name}
+                      </Link>
+                    ) : (
+                      <Link
+                        href={item.href}
+                        onClick={handleClick}
+                        className="block w-full text-lg font-medium text-tether-dark/70 hover:text-tether-dark transition-colors"
+                      >
+                        {item.name}
+                      </Link>
+                    )}
+                  </li>
+                );
+              })}
               {pageItems.length > 0 && (
-                <li className="text-2xl">
-                  <div className="mb-2 font-space-mono" style={{ fontFamily: "var(--font-space-mono), monospace" }}>Pages</div>
-                  <ul className="ml-4 space-y-4 text-xl">
+                <li className="pt-6 border-t border-tether-beige/30">
+                  <div className="mb-4 text-sm font-semibold text-tether-dark/70 uppercase tracking-wider">Pages</div>
+                  <ul className="space-y-3">
                     {pageItems.map((item: { name: string; href: string }) => (
                       <li key={item.name}>
                         <Link
                           href={item.href}
-                          className="block w-full hover:text-gray-600 transition-colors font-space-mono"
-                          style={{ fontFamily: "var(--font-space-mono), monospace" }}
+                          className="block w-full text-base text-tether-dark/70 hover:text-tether-dark transition-colors"
                           onClick={() => setIsOpen(false)}
                         >
                           {item.name}
@@ -122,15 +152,14 @@ export default function MobileMenu() {
                   </ul>
                 </li>
               )}
-              <li className="text-2xl">
-                <div className="mb-2 font-space-mono" style={{ fontFamily: "var(--font-space-mono), monospace" }}>Resources</div>
-                <ul className="ml-4 space-y-4 text-xl">
+              <li className="pt-6 border-t border-tether-beige/30">
+                <div className="mb-4 text-sm font-semibold text-tether-dark/70 uppercase tracking-wider">Resources</div>
+                <ul className="space-y-3">
                   {resourcesItems.map((item) => (
                     <li key={item.name}>
                       <Link
                         href={item.href}
-                        className="block w-full hover:text-gray-600 transition-colors font-space-mono"
-                        style={{ fontFamily: "var(--font-space-mono), monospace" }}
+                        className="block w-full text-base text-tether-dark/70 hover:text-tether-dark transition-colors"
                         onClick={() => setIsOpen(false)}
                       >
                         {item.name}
@@ -141,10 +170,10 @@ export default function MobileMenu() {
               </li>
             </ul>
           </div>
-          <div className="border-t p-6 space-y-4">
+          <div className="border-t border-tether-beige/30 p-6 space-y-3 bg-white">
             <Link
               href="/catalog"
-              className="flex items-center gap-3 text-sm font-bold w-full hover:text-gray-600 transition-colors"
+              className="flex items-center gap-3 text-sm font-medium text-tether-dark/70 hover:text-tether-dark transition-colors"
               onClick={() => setIsOpen(false)}
             >
               <SearchIcon className="w-5 h-5" />
@@ -152,7 +181,7 @@ export default function MobileMenu() {
             </Link>
             <Link
               href={loggedIn ? "/account" : "/login"}
-              className="flex items-center gap-3 text-sm font-bold hover:text-gray-600 transition-colors"
+              className="flex items-center gap-3 text-sm font-medium text-tether-dark/70 hover:text-tether-dark transition-colors"
               onClick={() => setIsOpen(false)}
             >
               <AccountIcon className="w-5 h-5" />
@@ -160,7 +189,7 @@ export default function MobileMenu() {
             </Link>
             <Link
               href="/cart"
-              className="flex items-center gap-3 text-sm font-bold hover:text-gray-600 transition-colors"
+              className="flex items-center gap-3 text-sm font-medium text-tether-dark/70 hover:text-tether-dark transition-colors"
               onClick={() => setIsOpen(false)}
             >
               <CartIcon className="w-5 h-5" />

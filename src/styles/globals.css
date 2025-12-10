@@ -4,7 +4,122 @@
 
 @layer base {
   * {
+    font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
     font-weight: 400 !important;
+  }
+  
+  body {
+    font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
+  }
+
+  @keyframes blob {
+    0%, 100% {
+      transform: translate(0, 0) scale(1);
+    }
+    33% {
+      transform: translate(30px, -50px) scale(1.1);
+    }
+    66% {
+      transform: translate(-20px, 20px) scale(0.9);
+    }
+  }
+
+  .animate-blob {
+    animation: blob 7s infinite;
+  }
+
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+
+  .bg-grid-pattern {
+    background-image: 
+      linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  /* Tether Navigation Styles - Matching original structure */
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .col {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .span_3 {
+    flex: 0 0 25%;
+    max-width: 25%;
+  }
+
+  .span_9 {
+    flex: 0 0 75%;
+    max-width: 75%;
+  }
+
+  .col_last {
+    margin-left: auto;
+  }
+
+  @media (max-width: 768px) {
+    .span_3 {
+      flex: 0 0 100%;
+      max-width: 100%;
+    }
+    
+    .span_9 {
+      flex: 0 0 100%;
+      max-width: 100%;
+      margin-left: 0;
+    }
+  }
+
+  /* Text Reveal Button Effect - Matching Tether */
+  .nectar-text-reveal-button {
+    position: relative;
+    display: inline-block;
+    overflow: hidden;
+    vertical-align: bottom;
+  }
+
+  .nectar-text-reveal-button__text {
+    display: inline-block;
+    position: relative;
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    transform: translateY(0);
+  }
+
+  .nectar-text-reveal-button:hover .nectar-text-reveal-button__text {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+
+  .nectar-text-reveal-button::before {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: inline-block;
+    transform: translateY(100%);
+    opacity: 0;
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  .nectar-text-reveal-button:hover::before {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  .no-image {
+    text-decoration: none;
   }
 }
 
@@ -65,8 +180,20 @@
 @layer components {
   h1,
   h2 {
-    font-family: var(--font-chakra-petch), sans-serif;
+    font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
     font-weight: 400 !important;
+  }
+
+  h1 {
+    @apply text-4xl md:text-5xl lg:text-6xl;
+  }
+
+  h2 {
+    @apply text-3xl md:text-4xl lg:text-5xl;
+  }
+
+  h3 {
+    @apply text-2xl md:text-3xl;
   }
 
   .content-container {

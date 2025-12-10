@@ -73,13 +73,13 @@ const DynamicPage: NextPage<PageProps> = ({
   if (error || !page) {
     return (
       <Layout title="Page Not Found">
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-tether-cream">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
             <div className="text-center">
-              <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              <h1 className="text-4xl font-bold text-tether-dark mb-4">
                 Page Not Found
               </h1>
-              <p className="text-gray-600 mb-8">{error || 'The page you are looking for does not exist.'}</p>
+              <p className="text-tether-dark/70 mb-8">{error || 'The page you are looking for does not exist.'}</p>
             </div>
           </div>
         </div>
@@ -97,22 +97,22 @@ const DynamicPage: NextPage<PageProps> = ({
         />
       </Head>
 
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-tether-cream">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
           <article>
             {/* Title */}
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
+            <h1 className="text-4xl md:text-5xl font-bold text-tether-dark mb-8">
               {page.title}
             </h1>
 
             {/* Featured Image */}
             {page.featuredImage?.node?.sourceUrl && !imageError && (
-              <div className="relative w-full h-64 md:h-96 mb-8 rounded-2xl overflow-hidden bg-gray-100">
+              <div className="relative w-full h-64 md:h-96 mb-8 rounded-tether overflow-hidden bg-tether-beige">
                 <Image
                   src={page.featuredImage.node.sourceUrl}
                   alt={page.featuredImage.node.altText || page.title}
                   fill
-                  className="object-cover rounded-2xl"
+                  className="object-cover rounded-tether"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 800px"
                   style={{
                     objectFit: 'cover',

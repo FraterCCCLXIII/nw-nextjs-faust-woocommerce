@@ -92,8 +92,18 @@ const Catalog: NextPage = ({
         <title>Catalog | WooCommerce Next.js</title>
       </Head>
 
-      <div className="container mx-auto px-4 py-8">
-        <ProductList products={productsWithPrices} title="Products" />
+      <div className="min-h-screen bg-tether-cream">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+          <div className="mb-12">
+            <h1 className="text-4xl md:text-5xl font-bold text-tether-dark mb-4">
+              Products
+            </h1>
+            <p className="text-lg text-tether-dark/70">
+              Discover our collection of quality products
+            </p>
+          </div>
+          <ProductList products={productsWithPrices} title="Products" />
+        </div>
       </div>
     </Layout>
   );
