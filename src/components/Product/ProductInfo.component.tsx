@@ -5,6 +5,7 @@ interface ProductInfoProps {
   product: {
     name: string;
     description?: string;
+    shortDescription?: string;
     productCategories?: {
       nodes?: Array<{
         name: string;
@@ -16,7 +17,8 @@ interface ProductInfoProps {
 
 const ProductInfo = ({ product }: ProductInfoProps) => {
   const collection = product.productCategories?.nodes?.[0];
-  const cleanDescription = cleanHtmlFromText(product.description);
+  // Use shortDescription for the area below the title, fallback to description if shortDescription is not available
+  const cleanDescription = cleanHtmlFromText(product.shortDescription || product.description);
 
   return (
     <div id="product-info">

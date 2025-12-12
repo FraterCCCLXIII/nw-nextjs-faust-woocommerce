@@ -53,13 +53,55 @@ export const useProductFilters = (products: Product[]) => {
 
   const filterProducts = (products: Product[]) => {
     const filtered = products?.filter((product: Product) => {
-      // Filter by price - skip products with null/undefined prices
-      if (!product.price) return false;
-      const productPrice = parseFloat(product.price.replace(/[^0-9.]/g, ''));
-      if (isNaN(productPrice)) return false;
+      // Filter by price - skip products with null/undefined/empty prices
+      // For variable products, price might be a range (e.g., "$10 - $20")
+      // Use the first price in the range, or fallback to regularPrice
+      const priceToCheck = product.price || product.regularPrice || product.salePrice || '';
+      
+      if (!priceToCheck || priceToCheck === '') {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[useProductFilters] Filtering out product without price:', {
+            name: product.name,
+            price: product.price,
+            regularPrice: product.regularPrice,
+            salePrice: product.salePrice,
+          });
+        }
+        return false;
+      }
+      
+      // Handle price ranges (e.g., "$10 - $20" or "$10.00 - $20.00")
+      // Extract the first (minimum) price from the range
+      let priceString = priceToCheck;
+      if (priceString.includes(' - ')) {
+        priceString = priceString.split(' - ')[0].trim();
+      }
+      
+      const productPrice = parseFloat(priceString.replace(/[^0-9.]/g, ''));
+      if (isNaN(productPrice)) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[useProductFilters] Filtering out product with invalid price:', {
+            name: product.name,
+            originalPrice: priceToCheck,
+            extractedPrice: priceString,
+            parsedPrice: productPrice,
+          });
+        }
+        return false;
+      }
+      
       const withinPriceRange =
         productPrice >= priceRange[0] && productPrice <= priceRange[1];
-      if (!withinPriceRange) return false;
+      if (!withinPriceRange) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[useProductFilters] Filtering out product outside price range:', {
+            name: product.name,
+            price: productPrice,
+            priceRange: priceRange,
+          });
+        }
+        return false;
+      }
 
       // Filter by product type
       const selectedTypes = productTypes

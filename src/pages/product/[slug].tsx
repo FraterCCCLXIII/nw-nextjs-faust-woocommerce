@@ -60,13 +60,31 @@ export const getServerSideProps: GetServerSideProps = async ({
     return { props: {} };
   }
 
-  const { data, loading, networkStatus } = await client.query({
-    query: GET_SINGLE_PRODUCT,
-    variables: { slug: params?.slug },
-  });
+  try {
+    const { data, loading, networkStatus, errors } = await client.query({
+      query: GET_SINGLE_PRODUCT,
+      variables: { slug: params?.slug },
+      errorPolicy: 'all', // Continue even if there are errors
+    });
 
-  return {
-    props: { product: data.product, loading, networkStatus },
-  };
+    if (errors) {
+      console.error('GraphQL errors:', errors);
+    }
+
+    if (!data || !data.product) {
+      return {
+        notFound: true,
+      };
+    }
+
+    return {
+      props: { product: data.product, loading, networkStatus },
+    };
+  } catch (error) {
+    console.error('Error fetching product:', error);
+    return {
+      notFound: true,
+    };
+  }
 };
 

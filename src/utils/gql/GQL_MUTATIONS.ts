@@ -323,3 +323,11 @@ export const UPDATE_CUSTOMER = gql`
     }
   }
 `;
+
+export const SUBMIT_PRODUCT_REVIEW = gql`
+  mutation SubmitProductReview($input: WriteReviewInput!) {
+    writeReview(input: $input) {
+      __typename
+    }
+  }
+`;

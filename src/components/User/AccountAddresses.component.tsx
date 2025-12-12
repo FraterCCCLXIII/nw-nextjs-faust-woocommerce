@@ -5,6 +5,60 @@ import { GET_CURRENT_USER } from '@/utils/gql/GQL_QUERIES';
 import { UPDATE_CUSTOMER } from '@/utils/gql/GQL_MUTATIONS';
 import LoadingSpinner from '../LoadingSpinner/LoadingSpinner.component';
 
+// US States with their codes
+const US_STATES = [
+  { code: 'AL', name: 'Alabama' },
+  { code: 'AK', name: 'Alaska' },
+  { code: 'AZ', name: 'Arizona' },
+  { code: 'AR', name: 'Arkansas' },
+  { code: 'CA', name: 'California' },
+  { code: 'CO', name: 'Colorado' },
+  { code: 'CT', name: 'Connecticut' },
+  { code: 'DE', name: 'Delaware' },
+  { code: 'FL', name: 'Florida' },
+  { code: 'GA', name: 'Georgia' },
+  { code: 'HI', name: 'Hawaii' },
+  { code: 'ID', name: 'Idaho' },
+  { code: 'IL', name: 'Illinois' },
+  { code: 'IN', name: 'Indiana' },
+  { code: 'IA', name: 'Iowa' },
+  { code: 'KS', name: 'Kansas' },
+  { code: 'KY', name: 'Kentucky' },
+  { code: 'LA', name: 'Louisiana' },
+  { code: 'ME', name: 'Maine' },
+  { code: 'MD', name: 'Maryland' },
+  { code: 'MA', name: 'Massachusetts' },
+  { code: 'MI', name: 'Michigan' },
+  { code: 'MN', name: 'Minnesota' },
+  { code: 'MS', name: 'Mississippi' },
+  { code: 'MO', name: 'Missouri' },
+  { code: 'MT', name: 'Montana' },
+  { code: 'NE', name: 'Nebraska' },
+  { code: 'NV', name: 'Nevada' },
+  { code: 'NH', name: 'New Hampshire' },
+  { code: 'NJ', name: 'New Jersey' },
+  { code: 'NM', name: 'New Mexico' },
+  { code: 'NY', name: 'New York' },
+  { code: 'NC', name: 'North Carolina' },
+  { code: 'ND', name: 'North Dakota' },
+  { code: 'OH', name: 'Ohio' },
+  { code: 'OK', name: 'Oklahoma' },
+  { code: 'OR', name: 'Oregon' },
+  { code: 'PA', name: 'Pennsylvania' },
+  { code: 'RI', name: 'Rhode Island' },
+  { code: 'SC', name: 'South Carolina' },
+  { code: 'SD', name: 'South Dakota' },
+  { code: 'TN', name: 'Tennessee' },
+  { code: 'TX', name: 'Texas' },
+  { code: 'UT', name: 'Utah' },
+  { code: 'VT', name: 'Vermont' },
+  { code: 'VA', name: 'Virginia' },
+  { code: 'WA', name: 'Washington' },
+  { code: 'WV', name: 'West Virginia' },
+  { code: 'WI', name: 'Wisconsin' },
+  { code: 'WY', name: 'Wyoming' },
+];
+
 interface AddressFormData {
   firstName: string;
   lastName: string;
@@ -39,7 +93,7 @@ const AccountAddresses = () => {
     address2: '',
     city: '',
     postcode: '',
-    country: '',
+    country: 'US',
     state: '',
     email: '',
     phone: '',
@@ -51,7 +105,7 @@ const AccountAddresses = () => {
     address2: '',
     city: '',
     postcode: '',
-    country: '',
+    country: 'US',
     state: '',
   });
   const [updateMessage, setUpdateMessage] = useState<string | null>(null);
@@ -69,7 +123,7 @@ const AccountAddresses = () => {
         address2: customer.billing.address2 || '',
         city: customer.billing.city || '',
         postcode: customer.billing.postcode || '',
-        country: customer.billing.country || '',
+        country: customer.billing.country || 'US',
         state: customer.billing.state || '',
         email: customer.billing.email || customer.email || '',
         phone: customer.billing.phone || '',
@@ -86,7 +140,7 @@ const AccountAddresses = () => {
         address2: customer.shipping.address2 || '',
         city: customer.shipping.city || '',
         postcode: customer.shipping.postcode || '',
-        country: customer.shipping.country || '',
+        country: customer.shipping.country || 'US',
         state: customer.shipping.state || '',
       });
     }
@@ -292,22 +346,29 @@ const AccountAddresses = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
-                  <input
-                    type="text"
+                  <select
                     value={billingForm.country}
                     onChange={(e) => setBillingForm({ ...billingForm, country: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                     required
-                  />
+                  >
+                    <option value="US">United States</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
-                  <input
-                    type="text"
+                  <select
                     value={billingForm.state}
                     onChange={(e) => setBillingForm({ ...billingForm, state: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                  />
+                  >
+                    <option value="">Select a state</option>
+                    {US_STATES.map((state) => (
+                      <option key={state.code} value={state.code}>
+                        {state.code} - {state.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -484,22 +545,29 @@ const AccountAddresses = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
-                  <input
-                    type="text"
+                  <select
                     value={shippingForm.country}
                     onChange={(e) => setShippingForm({ ...shippingForm, country: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
                     required
-                  />
+                  >
+                    <option value="US">United States</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
-                  <input
-                    type="text"
+                  <select
                     value={shippingForm.state}
                     onChange={(e) => setShippingForm({ ...shippingForm, state: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                  />
+                  >
+                    <option value="">Select a state</option>
+                    {US_STATES.map((state) => (
+                      <option key={state.code} value={state.code}>
+                        {state.code} - {state.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
               <div className="flex gap-2">

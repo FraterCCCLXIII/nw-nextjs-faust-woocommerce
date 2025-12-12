@@ -14,6 +14,7 @@ import client from '@/utils/apollo/ApolloClient';
 import {
   GET_POST_BY_SLUG,
   GET_ALL_POST_SLUGS,
+  GET_ALL_POSTS,
 } from '@/utils/gql/GQL_QUERIES';
 
 interface Post {
@@ -129,7 +130,7 @@ const ArticlePost: NextPage<PostPageProps> = ({
             {/* Tags */}
             {post.tags?.nodes && post.tags.nodes.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-4">
-                {post.tags.nodes.map((tag) => (
+                {post.tags.nodes.map((tag: { slug: string; name: string }) => (
                   <span
                     key={tag.slug}
                     className="text-xs px-3 py-1 bg-gray-100 text-gray-700 rounded-full"
@@ -191,10 +192,35 @@ const ArticlePost: NextPage<PostPageProps> = ({
             )}
 
             {/* Content */}
-            <BlockRenderer 
-              editorBlocks={post.editorBlocks}
-              fallbackContent={post.content}
-            />
+            {(() => {
+              // Debug logging
+              if (typeof window !== 'undefined') {
+                console.log('[ArticlePost] Post data:', {
+                  hasEditorBlocks: !!post.editorBlocks,
+                  editorBlocksLength: post.editorBlocks?.length || 0,
+                  hasContent: !!post.content,
+                  contentLength: post.content?.length || 0,
+                  contentPreview: post.content?.substring(0, 100),
+                });
+              }
+              
+              // If we have content but no editorBlocks, render content directly as fallback
+              if (post.content && (!post.editorBlocks || post.editorBlocks.length === 0)) {
+                return (
+                  <div
+                    className="prose prose-lg max-w-none"
+                    dangerouslySetInnerHTML={{ __html: post.content }}
+                  />
+                );
+              }
+              
+              return (
+                <BlockRenderer 
+                  editorBlocks={post.editorBlocks}
+                  fallbackContent={post.content}
+                />
+              );
+            })()}
           </article>
         </div>
       </div>
@@ -239,20 +265,132 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
       };
     }
 
-    const { data } = await client.query({
-      query: GET_POST_BY_SLUG,
-      variables: { slug },
-    });
+    console.log('[getStaticProps] Fetching post with slug:', slug);
+    console.log('[getStaticProps] GraphQL URL:', process.env.NEXT_PUBLIC_GRAPHQL_URL || 'http://moleculestore.local/graphql');
 
-    if (!data.post) {
+    let result;
+    try {
+      result = await client.query({
+        query: GET_POST_BY_SLUG,
+        variables: { slug },
+        errorPolicy: 'all', // Return partial data even if there are errors
+      });
+      console.log('[getStaticProps] Query completed, result:', {
+        hasData: !!result?.data,
+        hasErrors: !!result?.errors,
+        resultKeys: result ? Object.keys(result) : [],
+      });
+    } catch (queryError: any) {
+      console.error('[getStaticProps] Query threw an exception:', queryError);
+      console.error('[getStaticProps] Query error details:', {
+        message: queryError.message,
+        stack: queryError.stack,
+        graphQLErrors: queryError.graphQLErrors,
+        networkError: queryError.networkError,
+      });
       return {
         props: {
           post: null,
-          error: 'Post not found',
+          error: `Query failed: ${queryError.message || 'Unknown error'}`,
+        },
+      };
+    }
+
+    if (!result) {
+      console.error('[getStaticProps] Query returned no result');
+      return {
+        props: {
+          post: null,
+          error: 'Query returned no result',
+        },
+      };
+    }
+
+    const { data, errors } = result;
+
+    // Debug logging - check what we got
+    const stringifiedData = data ? JSON.stringify(data, null, 2) : 'null';
+    console.log('[getStaticProps] GraphQL response:', {
+      hasData: !!data,
+      hasPost: !!data?.post,
+      errors: errors,
+      errorCount: errors?.length || 0,
+      errorMessages: errors?.map((e: any) => e.message || String(e)) || [],
+      dataKeys: data ? Object.keys(data) : [],
+      slug: slug,
+      fullData: stringifiedData.substring(0, 500),
+    });
+
+    if (errors && errors.length > 0) {
+      console.error('[getStaticProps] GraphQL errors:', errors);
+      const errorMessages = errors.map((e: any) => e.message || String(e)).join(', ');
+      return {
+        props: {
+          post: null,
+          error: `GraphQL error: ${errorMessages}`,
+        },
+      };
+    }
+
+    if (!data) {
+      console.error('[getStaticProps] No data returned from GraphQL query');
+      return {
+        props: {
+          post: null,
+          error: 'No data returned from server',
+        },
+      };
+    }
+
+    if (!data.post) {
+      console.error('[getStaticProps] No post found for slug:', slug);
+      // Try to find the post in posts list as fallback
+      try {
+        const { data: postsData } = await client.query({
+          query: GET_ALL_POSTS,
+        });
+        const allPosts = postsData?.posts?.nodes || [];
+        const foundPost = allPosts.find((p: any) => p.slug === slug);
+        if (foundPost) {
+          console.log('[getStaticProps] Found post in posts list, fetching full details...');
+          // If found, try querying again with databaseId
+          const { data: postData } = await client.query({
+            query: GET_POST_BY_SLUG,
+            variables: { slug: foundPost.databaseId.toString() },
+            errorPolicy: 'all',
+          });
+          if (postData?.post) {
+            return {
+              props: {
+                post: postData.post,
+                error: null,
+              },
+              revalidate: 60,
+            };
+          }
+        }
+      } catch (fallbackError) {
+        console.error('[getStaticProps] Fallback query failed:', fallbackError);
+      }
+      
+      return {
+        props: {
+          post: null,
+          error: `Post not found for slug: ${slug}`,
         },
         notFound: true,
       };
     }
+
+    // Debug logging
+    console.log('[getStaticProps] Post data:', {
+      title: data.post.title,
+      hasEditorBlocks: !!data.post.editorBlocks,
+      editorBlocksLength: data.post.editorBlocks?.length || 0,
+      hasContent: !!data.post.content,
+      contentLength: data.post.content?.length || 0,
+      contentPreview: data.post.content?.substring(0, 200),
+    });
 
     return {
       props: {
@@ -262,7 +400,13 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
       revalidate: 60, // Revalidate every 60 seconds
     };
   } catch (error: any) {
-    console.error('Error fetching post:', error);
+    console.error('[getStaticProps] Exception fetching post:', error);
+    console.error('[getStaticProps] Error details:', {
+      message: error.message,
+      stack: error.stack,
+      graphQLErrors: error.graphQLErrors,
+      networkError: error.networkError,
+    });
     return {
       props: {
         post: null,

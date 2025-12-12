@@ -18,29 +18,55 @@ const SingleProduct = ({ product }: IProductRootObject) => {
   }, [product]);
 
   // Prepare images array for ImageGallery
-  // Handle both null image and missing sourceUrl
+  // Combine main image with gallery images
   const images = (() => {
-    // Check if image exists and has sourceUrl
+    const imageArray: Array<{
+      id: string;
+      sourceUrl: string;
+      altText: string;
+    }> = [];
+
+    // Add main product image first (if it exists)
     if (product.image?.sourceUrl) {
-      return [
-        {
-          id: product.image.id || product.databaseId?.toString() || '1',
-          sourceUrl: product.image.sourceUrl,
-          altText: product.image.title || product.name || 'Product image',
-        },
-      ];
+      imageArray.push({
+        id: product.image.id || product.databaseId?.toString() || '1',
+        sourceUrl: product.image.sourceUrl,
+        altText: product.image.title || product.name || 'Product image',
+      });
     }
-    
-    // Log in development only
-    if (process.env.NODE_ENV === 'development') {
+
+    // Add gallery images (if they exist)
+    // @ts-ignore - galleryImages may not be in the type definition yet
+    const galleryImages = product.galleryImages;
+    if (galleryImages?.nodes && Array.isArray(galleryImages.nodes)) {
+      galleryImages.nodes.forEach((galleryImage: any) => {
+        if (galleryImage?.sourceUrl) {
+          // Skip if this gallery image is the same as the main image
+          const isDuplicate = imageArray.some(
+            (img) => img.sourceUrl === galleryImage.sourceUrl
+          );
+          if (!isDuplicate) {
+            imageArray.push({
+              id: galleryImage.id || `gallery-${imageArray.length + 1}`,
+              sourceUrl: galleryImage.sourceUrl,
+              altText: galleryImage.altText || galleryImage.title || product.name || 'Product image',
+            });
+          }
+        }
+      });
+    }
+
+    // Log in development only if no images found
+    if (imageArray.length === 0 && process.env.NODE_ENV === 'development') {
       console.warn('Product image missing for product:', {
         name: product.name,
         databaseId: product.databaseId,
         image: product.image,
+        galleryImages: galleryImages,
       });
     }
-    
-    return [];
+
+    return imageArray;
   })();
 
   if (isLoading) {

@@ -14,6 +14,7 @@ import Layout from '@/components/Layout/Layout.component';
 import client from '@/utils/apollo/ApolloClient';
 import {
   GET_PAGE_BY_SLUG,
+  GET_PAGE_BY_SLUG_SIMPLE,
   GET_ALL_PAGE_SLUGS,
 } from '@/utils/gql/GQL_QUERIES';
 
@@ -129,11 +130,13 @@ const DynamicPage: NextPage<PageProps> = ({
 
             {/* Content */}
             {page.editorBlocks && page.editorBlocks.length > 0 ? (
-              <WordPressBlocksViewer 
-                blocks={flatListToHierarchical(page.editorBlocks, {
-                  childrenKey: 'innerBlocks',
-                })} 
-              />
+              <div className="wp-blocks">
+                <WordPressBlocksViewer 
+                  blocks={flatListToHierarchical(page.editorBlocks, {
+                    childrenKey: 'innerBlocks',
+                  })} 
+                />
+              </div>
             ) : (
               <div
                 className="prose prose-lg max-w-none product-detail-content"
@@ -185,65 +188,137 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
       };
     }
 
-    // WordPress pages use URI format
-    const uri = `/${slug}/`;
+    // WordPress pages use URI format - try multiple formats
+    const uriFormats = [
+      `/${slug}/`,  // Standard WordPress URI format
+      `/${slug}`,   // Without trailing slash
+      slug,         // Just the slug
+    ];
 
-    const { data } = await client.query({
-      query: GET_PAGE_BY_SLUG,
-      variables: { uri },
-    });
+    console.log('[getStaticProps] Fetching page with slug:', slug);
+    console.log('[getStaticProps] Will try URI formats:', uriFormats);
 
-    if (!data.pageBy) {
+    let result;
+    let lastError: any = null;
+    let successfulUri: string | null = null;
+    let useSimpleQuery = false;
+    
+    // Try each URI format until one works
+    // First try the full query with editorBlocks, then fall back to simplified if needed
+    for (const uri of uriFormats) {
+      try {
+        console.log('[getStaticProps] Trying URI:', uri);
+        
+        // First attempt: Try full query with editorBlocks (if WPGraphQL Content Blocks plugin is installed)
+        try {
+          result = await client.query({
+            query: GET_PAGE_BY_SLUG,
+            variables: { uri },
+            errorPolicy: 'all', // Return partial data even if there are errors
+          });
+          
+          // Check if we got GraphQL errors related to editorBlocks
+          if (result.errors && result.errors.length > 0) {
+            const hasEditorBlocksError = result.errors.some((e: any) => 
+              e.message?.includes('editorBlocks') || 
+              e.message?.includes('Unknown type "Core') ||
+              e.message?.includes('Cannot query field')
+            );
+            
+            if (hasEditorBlocksError) {
+              console.log('[getStaticProps] EditorBlocks not supported, falling back to simplified query...');
+              // Fall back to simplified query
+              result = await client.query({
+                query: GET_PAGE_BY_SLUG_SIMPLE,
+                variables: { uri },
+                errorPolicy: 'all',
+              });
+              useSimpleQuery = true;
+            }
+          }
+        } catch (queryError: any) {
+          // If the full query fails completely, try simplified query
+          console.log('[getStaticProps] Full query failed, trying simplified query...', queryError.message);
+          result = await client.query({
+            query: GET_PAGE_BY_SLUG_SIMPLE,
+            variables: { uri },
+            errorPolicy: 'all',
+          });
+          useSimpleQuery = true;
+        }
+        
+        // If we got data and pageBy exists, break out of the loop
+        if (result?.data?.pageBy) {
+          console.log('[getStaticProps] Successfully found page with URI:', uri, useSimpleQuery ? '(using simplified query)' : '(using full query with editorBlocks)');
+          successfulUri = uri;
+          break;
+        }
+      } catch (queryError: any) {
+        console.log('[getStaticProps] Query failed for URI:', uri, queryError.message);
+        lastError = queryError;
+        // Continue to next URI format
+        continue;
+      }
+    }
+
+    // If all URI formats failed, return error
+    if (!result) {
+      console.error('[getStaticProps] All URI formats failed. Last error:', lastError);
       return {
         props: {
           page: null,
-          error: 'Page not found',
+          error: `Query failed: ${lastError?.message || 'Unknown error'}`,
+        },
+      };
+    }
+
+    const { data, errors } = result;
+
+    // Check for GraphQL errors (should be minimal with simplified query)
+    if (errors && errors.length > 0) {
+      console.error('[getStaticProps] GraphQL errors:', errors);
+      const errorMessages = errors.map((e: any) => e.message || String(e)).join(', ');
+      
+      // Only return error if it's not a "page not found" type error
+      // Some GraphQL implementations return errors even when pageBy is null
+      if (!data?.pageBy) {
+        // This will be handled below
+      } else {
+        // If we have data but also errors, log but continue
+        console.warn('[getStaticProps] GraphQL errors but data exists:', errorMessages);
+      }
+    }
+
+    // Check if data exists
+    if (!data) {
+      console.error('[getStaticProps] No data returned from GraphQL query');
+      return {
+        props: {
+          page: null,
+          error: 'No data returned from server',
+        },
+      };
+    }
+
+    // Check if pageBy exists
+    if (!data.pageBy) {
+      console.error('[getStaticProps] No page found for slug:', slug);
+      return {
+        props: {
+          page: null,
+          error: `Page not found for slug: ${slug}`,
         },
         notFound: true,
       };
     }
 
-    // Fix image URLs in editorBlocks
-    const wordpressUrl = process.env.NEXT_PUBLIC_WORDPRESS_URL || 'http://localhost:8080';
+    // Process the page data
+    // If we used the simplified query, editorBlocks will be null/undefined
+    // If we used the full query and editorBlocks is available, it will be included
     const fixedPage = {
       ...data.pageBy,
-      editorBlocks: data.pageBy.editorBlocks?.map((block: any) => {
-        // Fix renderedHtml URLs
-        if (block.renderedHtml) {
-          let fixedHtml = block.renderedHtml;
-          // Fix malformed URLs like http://localhost:3000:8080
-          fixedHtml = fixedHtml.replace(/http:\/\/localhost:3000:8080/g, wordpressUrl);
-          // Fix relative URLs in src attributes
-          fixedHtml = fixedHtml.replace(/src="\/([^"]+)"/g, `src="${wordpressUrl}/$1"`);
-          // Fix URLs that incorrectly use localhost:3000
-          fixedHtml = fixedHtml.replace(/src="http:\/\/localhost:3000\/([^"]+)"/g, `src="${wordpressUrl}/$1"`);
-          return { ...block, renderedHtml: fixedHtml };
-        }
-        // Fix attributes URLs
-        if (block.attributes) {
-          const fixedAttrs = { ...block.attributes };
-          if (fixedAttrs.src) {
-            if (fixedAttrs.src.includes(':3000:8080')) {
-              fixedAttrs.src = fixedAttrs.src.replace(':3000:8080', ':8080');
-            } else if (fixedAttrs.src.startsWith('/') && !fixedAttrs.src.startsWith('//')) {
-              fixedAttrs.src = `${wordpressUrl}${fixedAttrs.src}`;
-            } else if (fixedAttrs.src.startsWith('http://localhost:3000')) {
-              fixedAttrs.src = fixedAttrs.src.replace('http://localhost:3000', wordpressUrl);
-            }
-          }
-          if (fixedAttrs.url) {
-            if (fixedAttrs.url.includes(':3000:8080')) {
-              fixedAttrs.url = fixedAttrs.url.replace(':3000:8080', ':8080');
-            } else if (fixedAttrs.url.startsWith('/') && !fixedAttrs.url.startsWith('//')) {
-              fixedAttrs.url = `${wordpressUrl}${fixedAttrs.url}`;
-            } else if (fixedAttrs.url.startsWith('http://localhost:3000')) {
-              fixedAttrs.url = fixedAttrs.url.replace('http://localhost:3000', wordpressUrl);
-            }
-          }
-          return { ...block, attributes: fixedAttrs };
-        }
-        return block;
-      }),
+      // editorBlocks will be included if available from the full query
+      // If null/undefined, the component will fall back to rendering content
     };
 
     return {

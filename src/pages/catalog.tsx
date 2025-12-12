@@ -13,26 +13,60 @@ const Catalog: NextPage = ({
 }: InferGetStaticPropsType<typeof getStaticProps>) => {
   // Transform WordPress products to ensure consistent format and handle null prices
   // This matches the transformation done in index.tsx for the carousel
-  const transformedProducts = products?.map((product: any) => ({
-    ...product,
-    databaseId: product.databaseId,
-    name: product.name,
-    price: product.price || product.regularPrice || '',
-    regularPrice: product.regularPrice || product.price || '',
-    salePrice: product.salePrice,
-    onSale: product.onSale || false,
-    slug: product.slug,
-    image: product.image,
-    // Preserve other fields that ProductList might need
-    productCategories: product.productCategories,
-    allPaColors: product.allPaColors,
-    allPaSizes: product.allPaSizes,
-    variations: product.variations,
-  })) || [];
+  const transformedProducts = products?.map((product: any) => {
+    // Get price from various possible locations
+    const price = product.price || product.regularPrice || '';
+    const regularPrice = product.regularPrice || product.price || '';
+    
+    return {
+      ...product,
+      databaseId: product.databaseId,
+      name: product.name,
+      price: price,
+      regularPrice: regularPrice,
+      salePrice: product.salePrice,
+      onSale: product.onSale || false,
+      slug: product.slug,
+      image: product.image,
+      // Preserve other fields that ProductList might need
+      productCategories: product.productCategories,
+      allPaColors: product.allPaColors,
+      allPaSizes: product.allPaSizes,
+      variations: product.variations,
+    };
+  }) || [];
+
+  // Debug: Log all products before filtering
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[Catalog] All products before price filter:', transformedProducts.map((p: any) => ({
+      name: p.name,
+      price: p.price,
+      regularPrice: p.regularPrice,
+      salePrice: p.salePrice,
+      hasPrice: !!(p.price && p.price !== ''),
+    })));
+  }
 
   // Filter out products without prices (they can't be displayed properly)
+  // Handle price ranges for variable products (e.g., "$10 - $20")
   const productsWithPrices = transformedProducts.filter(
-    (product: any) => product.price && product.price !== ''
+    (product: any) => {
+      // Check if product has any price (price, regularPrice, or salePrice)
+      const hasPrice = (product.price && product.price !== '') || 
+                      (product.regularPrice && product.regularPrice !== '') ||
+                      (product.salePrice && product.salePrice !== '');
+      
+      if (!hasPrice && process.env.NODE_ENV === 'development') {
+        console.log('[Catalog] Filtering out product without price:', {
+          name: product.name,
+          price: product.price,
+          regularPrice: product.regularPrice,
+          salePrice: product.salePrice,
+          isVariable: !!product.variations,
+        });
+      }
+      return hasPrice;
+    }
   );
 
   // Debug logging in development

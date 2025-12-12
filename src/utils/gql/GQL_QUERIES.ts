@@ -7,8 +7,10 @@ export const GET_SINGLE_PRODUCT = gql`
       id
       databaseId
       averageRating
+      reviewCount
       slug
       description
+      shortDescription
       onSale
       image {
         id
@@ -16,6 +18,15 @@ export const GET_SINGLE_PRODUCT = gql`
         title
         srcSet
         sourceUrl
+      }
+      galleryImages {
+        nodes {
+          id
+          sourceUrl
+          srcSet
+          altText
+          title
+        }
       }
       name
       metaData(keysIn: ["description", "reviews"]) {
@@ -366,6 +377,120 @@ export const GET_CUSTOMER_ORDERS = gql`
   }
 `;
 
+export const GET_ORDER_BY_NUMBER = gql`
+  query GET_ORDER_BY_NUMBER {
+    customer {
+      orders {
+        nodes {
+          id
+          databaseId
+          orderNumber
+          orderKey
+          status
+          date
+          total
+          subtotal
+          totalTax
+          shippingTotal
+          discountTotal
+          paymentMethod
+          paymentMethodTitle
+          currency
+          billing {
+            firstName
+            lastName
+            address1
+            address2
+            city
+            state
+            postcode
+            country
+            email
+            phone
+            company
+          }
+          shipping {
+            firstName
+            lastName
+            address1
+            address2
+            city
+            state
+            postcode
+            country
+            company
+          }
+          lineItems {
+            nodes {
+              id
+              productId
+              quantity
+              subtotal
+              total
+              product {
+                node {
+                  id
+                  name
+                  slug
+                  image {
+                    sourceUrl
+                    altText
+                  }
+                }
+              }
+              variation {
+                node {
+                  id
+                  name
+                  image {
+                    sourceUrl
+                    altText
+                  }
+                  attributes {
+                    nodes {
+                      name
+                      value
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+/**
+ * Fetch product reviews/comments
+ * Using contentIdIn to filter by product ID (GraphQL ID type)
+ */
+export const GET_PRODUCT_REVIEWS = gql`
+  query GetProductReviews($productId: ID!) {
+    comments(first: 50, where: { 
+      contentType: PRODUCT
+      status: "approve"
+      parent: 0
+      contentIdIn: [$productId]
+    }) {
+      nodes {
+        id
+        databaseId
+        date
+        dateGmt
+        content
+        author {
+          node {
+            name
+            email
+          }
+        }
+      }
+    }
+  }
+`;
+
 /**
  * Fetch all blog posts for research page
  */
@@ -443,78 +568,6 @@ export const GET_POST_BY_SLUG = gql`
         nodes {
           name
           slug
-        }
-      }
-      editorBlocks(flat: false) {
-        __typename
-        name
-        renderedHtml
-        clientId
-        parentClientId
-        ... on CoreParagraph {
-          attributes {
-            content
-            className
-          }
-        }
-        ... on CoreHeading {
-          attributes {
-            content
-            level
-            className
-          }
-        }
-        ... on CoreImage {
-          attributes {
-            url
-            alt
-            caption
-            width
-            height
-            className
-          }
-        }
-        ... on CoreGallery {
-          attributes {
-            images {
-              url
-              alt
-              id
-            }
-            columns
-            className
-          }
-        }
-        ... on CoreQuote {
-          attributes {
-            value
-            citation
-            className
-          }
-        }
-        ... on CoreCode {
-          attributes {
-            content
-            className
-          }
-        }
-        ... on CoreButton {
-          attributes {
-            text
-            url
-            className
-          }
-        }
-        ... on CoreColumns {
-          attributes {
-            className
-          }
-        }
-        ... on CoreColumn {
-          attributes {
-            width
-            className
-          }
         }
       }
     }
@@ -601,6 +654,33 @@ export const GET_PAGE_BY_SLUG = gql`
         ...${blocks.CoreColumn.fragments.key}
         ...${blocks.CoreList.fragments.key}
         ...${blocks.CoreSeparator.fragments.key}
+      }
+    }
+  }
+`;
+
+/**
+ * Get a single page by slug (simplified - without editorBlocks)
+ * Use this when editorBlocks is not supported by the GraphQL schema
+ */
+export const GET_PAGE_BY_SLUG_SIMPLE = gql`
+  query GetPageBySlugSimple($uri: String!) {
+    pageBy(uri: $uri) {
+      id
+      databaseId
+      title
+      slug
+      content
+      date
+      featuredImage {
+        node {
+          sourceUrl
+          altText
+          mediaDetails {
+            width
+            height
+          }
+        }
       }
     }
   }

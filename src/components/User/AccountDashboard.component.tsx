@@ -40,15 +40,15 @@ const AccountDashboard = () => {
 
       <p className="mb-6 text-gray-600">
         From your account dashboard you can view your{' '}
-        <Link href="/account/orders" className="text-gray-900 underline hover:text-gray-700">
+        <Link href="/account#orders" className="text-gray-900 underline hover:text-gray-700">
           recent orders
         </Link>
         , manage your{' '}
-        <Link href="/account/addresses" className="text-gray-900 underline hover:text-gray-700">
+        <Link href="/account#addresses" className="text-gray-900 underline hover:text-gray-700">
           shipping and billing addresses
         </Link>
         , and{' '}
-        <Link href="/account/account-details" className="text-gray-900 underline hover:text-gray-700">
+        <Link href="/account#account-details" className="text-gray-900 underline hover:text-gray-700">
           edit your password and account details
         </Link>
         .
@@ -97,7 +97,7 @@ const AccountDashboard = () => {
           {orders.length > 5 && (
             <div className="mt-4">
               <Link
-                href="/account/orders"
+                href="/account#orders"
                 className="text-gray-900 underline hover:text-gray-700 text-sm"
               >
                 View all orders →

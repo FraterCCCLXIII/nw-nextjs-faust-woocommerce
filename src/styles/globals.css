@@ -194,12 +194,16 @@
     @apply text-gray-900 underline hover:text-gray-700;
   }
 
-  .product-detail-content strong {
+  .product-detail-content strong,
+  .product-detail-content b {
     @apply font-semibold;
+    font-weight: 600 !important;
   }
 
-  .product-detail-content em {
+  .product-detail-content em,
+  .product-detail-content i {
     @apply italic;
+    font-style: italic !important;
   }
 
   .product-detail-content blockquote {
